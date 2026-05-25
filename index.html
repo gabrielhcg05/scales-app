@@ -6,1165 +6,937 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Escalas">
-  <meta name="theme-color" content="#0a0a0f">
+  <meta name="theme-color" content="#09090e">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon.svg">
   <title>Escalas</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=block" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@300;400&display=block" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:       #0a0a0f;
-      --surface:  #111118;
-      --border:   rgba(255,255,255,0.07);
-      --fg:       #f0ece4;
-      --dim:      rgba(240,236,228,0.35);
-      --dimmer:   rgba(240,236,228,0.12);
-      --gold:     #c9a96e;
-      --gold-dim: rgba(201,169,110,0.25);
-      --green:    #7ecfa0;
-      --red:      #cf7e7e;
-      --serif:    'Cormorant Garamond', Georgia, serif;
-      --mono:     'DM Mono', monospace;
+      --bg:      #09090e;
+      --surface: #0f0f17;
+      --border:  rgba(255,255,255,0.08);
+      --fg:      #ede8df;
+      --dim:     rgba(237,232,223,0.38);
+      --dimmer:  rgba(237,232,223,0.14);
+      --gold:    #b8955a;
+      --gold-bg: rgba(184,149,90,0.12);
+      --green:   #6fb58a;
+      --red:     #b56f6f;
+      --serif:   'Cormorant Garamond', Georgia, serif;
+      --mono:    'DM Mono', monospace;
     }
 
     html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--fg);
-      font-family: var(--serif);
-      overflow: hidden;
+      height: 100%; background: var(--bg); color: var(--fg);
+      font-family: var(--serif); overflow: hidden;
       -webkit-tap-highlight-color: transparent;
-      -webkit-touch-callout: none;
-      user-select: none;
+      -webkit-touch-callout: none; user-select: none;
     }
 
-    /* ── Noise texture overlay ── */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 200;
-      opacity: 0.6;
-    }
-
-    /* ── Subtle vignette ── */
     body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%);
-      pointer-events: none;
-      z-index: 1;
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 999;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
     }
 
-    /* ══════════════════════════════════════════
-       SCREENS
-    ══════════════════════════════════════════ */
-
+    /* ── SCREENS ── */
     .screen {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 28px;
-      z-index: 10;
-      opacity: 0;
-      transition: opacity 0.4s ease;
-      pointer-events: none;
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-start;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease; z-index: 10;
+      overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
     }
+    .screen.active { opacity: 1; pointer-events: all; }
 
-    .screen.active {
-      opacity: 1;
-      pointer-events: all;
-    }
+    /* ════════════════════════════════════════
+       HOME
+    ════════════════════════════════════════ */
+    #home { padding: 48px 24px 40px; gap: 0; }
 
-    /* ══════════════════════════════════════════
-       HOME SCREEN
-    ══════════════════════════════════════════ */
-
-    #home {
-      gap: 0;
-    }
-
-    #home-title {
-      font-size: 11px;
-      letter-spacing: 8px;
-      color: var(--dim);
-      font-family: var(--mono);
-      font-weight: 300;
+    .eyebrow {
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 6px; color: var(--dim);
       margin-bottom: 8px;
-      animation: fadeUp 0.7s ease 0.1s both;
+      animation: up 0.5s ease 0.05s both;
+    }
+    .big-title {
+      font-size: clamp(52px, 16vw, 72px);
+      font-weight: 300; line-height: 0.92;
+      letter-spacing: -2px; margin-bottom: 4px;
+      animation: up 0.5s ease 0.1s both;
+    }
+    .big-title em { font-style: italic; color: var(--gold); }
+    .home-sub {
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 3px; color: var(--dim);
+      margin-bottom: 40px;
+      animation: up 0.5s ease 0.12s both;
     }
 
-    #home-heading {
-      font-size: clamp(52px, 14vw, 72px);
-      font-weight: 300;
-      color: var(--fg);
-      line-height: 0.95;
-      letter-spacing: -1px;
-      margin-bottom: 6px;
-      animation: fadeUp 0.7s ease 0.15s both;
+    /* ── GROUP SELECTOR ── */
+    .section-label {
+      width: 100%; font-family: var(--mono);
+      font-size: 8px; letter-spacing: 4px;
+      color: var(--dimmer); margin-bottom: 8px;
+      animation: up 0.5s ease 0.15s both;
     }
 
-    #home-heading em {
-      font-style: italic;
-      color: var(--gold);
+    .group-list {
+      width: 100%; display: flex; flex-direction: column;
+      gap: 6px; margin-bottom: 24px;
+      animation: up 0.5s ease 0.18s both;
     }
 
-    #home-sub {
-      font-size: 13px;
-      color: var(--dim);
-      font-family: var(--mono);
-      letter-spacing: 1px;
-      margin-bottom: 52px;
-      animation: fadeUp 0.7s ease 0.2s both;
+    .group-row {
+      display: flex; align-items: stretch; gap: 6px;
     }
 
-    /* Mode selector */
-    #mode-selector {
-      width: 100%;
-      max-width: 340px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 36px;
-      animation: fadeUp 0.7s ease 0.25s both;
+    .group-btn {
+      flex: 1; background: transparent;
+      border: 1px solid var(--border); border-radius: 3px;
+      padding: 11px 10px; cursor: pointer;
+      font-family: var(--serif); font-size: 15px;
+      font-weight: 300; color: rgba(237,232,223,0.5);
+      transition: all 0.15s ease;
+      -webkit-appearance: none; outline: none;
+      display: flex; flex-direction: column;
+      align-items: flex-start; gap: 2px;
+      text-align: left;
     }
-
-    .mode-btn {
-      width: 100%;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      padding: 16px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      -webkit-appearance: none;
-      outline: none;
+    .group-btn .gb-name { font-size: 15px; }
+    .group-btn .gb-sub  {
+      font-family: var(--mono); font-size: 8px;
+      letter-spacing: 1px; color: var(--dimmer);
     }
-
-    .mode-btn:active, .mode-btn.selected {
+    .group-btn.sel {
       border-color: var(--gold);
-      background: var(--gold-dim);
-    }
-
-    .mode-btn-left {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 3px;
-    }
-
-    .mode-btn-name {
-      font-family: var(--serif);
-      font-size: 20px;
-      font-weight: 300;
+      background: var(--gold-bg);
       color: var(--fg);
-      letter-spacing: 0.5px;
+    }
+    .group-btn.sel .gb-sub { color: rgba(184,149,90,0.6); }
+    .group-btn:active { transform: scale(0.96); }
+
+    /* "ALL" wide button */
+    .group-btn.wide {
+      flex: none; width: 100%;
+      flex-direction: row; align-items: center;
+      justify-content: space-between; padding: 12px 14px;
+    }
+    .group-btn.wide .gb-name { font-size: 16px; }
+
+    /* ── TONIC SELECTOR ── */
+    .tonic-grid {
+      width: 100%;
+      display: grid; grid-template-columns: repeat(6, 1fr);
+      gap: 6px; margin-bottom: 24px;
+      animation: up 0.5s ease 0.2s both;
     }
 
-    .mode-btn-desc {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--dim);
-      letter-spacing: 1px;
+    .tonic-btn {
+      aspect-ratio: 1; background: transparent;
+      border: 1px solid var(--border); border-radius: 3px;
+      font-family: var(--mono); font-size: 12px;
+      color: rgba(237,232,223,0.4); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.13s ease;
+      -webkit-appearance: none; outline: none;
+    }
+    .tonic-btn.sel {
+      border-color: var(--gold);
+      background: var(--gold-bg); color: var(--fg);
+    }
+    .tonic-btn:active { transform: scale(0.88); }
+    .tonic-btn.all-tonic {
+      grid-column: span 6;
+      aspect-ratio: auto; padding: 10px;
+      font-size: 10px; letter-spacing: 3px;
     }
 
-    .mode-btn-count {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--dimmer);
-      letter-spacing: 1px;
+    /* ── CTA ── */
+    .cta-row {
+      width: 100%; display: flex; gap: 8px;
+      margin-bottom: 28px;
+      animation: up 0.5s ease 0.25s both;
     }
 
     #start-btn {
-      width: 100%;
-      max-width: 340px;
-      background: var(--gold);
-      border: none;
-      border-radius: 3px;
-      padding: 16px 20px;
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 4px;
-      color: var(--bg);
-      font-weight: 400;
-      cursor: pointer;
-      transition: all 0.2s;
-      -webkit-appearance: none;
-      outline: none;
-      animation: fadeUp 0.7s ease 0.3s both;
+      flex: 1; background: var(--gold); border: none;
+      border-radius: 3px; padding: 14px;
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 5px; color: var(--bg);
+      cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+      -webkit-appearance: none; outline: none;
     }
+    #start-btn:active { opacity: 0.8; transform: scale(0.985); }
 
-    #start-btn:active {
-      opacity: 0.8;
-      transform: scale(0.98);
+    #preview-btn {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 3px; padding: 14px 16px;
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 2px; color: var(--dim);
+      cursor: pointer; transition: all 0.15s;
+      -webkit-appearance: none; outline: none;
+      white-space: nowrap;
     }
+    #preview-btn:active { border-color: var(--gold); color: var(--gold); }
 
-    #home-stats {
-      margin-top: 28px;
-      display: flex;
-      gap: 32px;
-      animation: fadeUp 0.7s ease 0.35s both;
-    }
-
-    .home-stat {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .home-stat-value {
-      font-family: var(--mono);
-      font-size: 20px;
-      color: var(--fg);
-      font-weight: 300;
-    }
-
-    .home-stat-label {
-      font-family: var(--mono);
-      font-size: 9px;
-      letter-spacing: 2px;
-      color: var(--dimmer);
-      text-transform: uppercase;
-    }
-
-    /* ══════════════════════════════════════════
-       QUIZ SCREEN
-    ══════════════════════════════════════════ */
-
-    #quiz { justify-content: space-between; padding-top: 56px; padding-bottom: 40px; }
-
-    /* Progress bar */
-    #progress-bar-wrap {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: var(--border);
-      z-index: 50;
-    }
-
-    #progress-bar {
-      height: 100%;
-      background: var(--gold);
-      transition: width 0.4s ease;
-    }
-
-    /* Top row */
-    #quiz-top {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    /* selection summary */
+    #selection-summary {
+      width: 100%; font-family: var(--mono);
+      font-size: 9px; letter-spacing: 2px;
+      color: var(--dimmer); text-align: center;
       margin-bottom: 8px;
+      animation: up 0.5s ease 0.27s both;
+      min-height: 14px;
     }
 
-    #quiz-counter {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--dim);
-      letter-spacing: 2px;
+    /* home stats */
+    .home-stats {
+      display: flex; gap: 32px;
+      animation: up 0.5s ease 0.3s both;
+    }
+    .hstat { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .hstat-v { font-family: var(--mono); font-size: 19px; color: var(--fg); font-weight: 300; }
+    .hstat-l { font-family: var(--mono); font-size: 8px; letter-spacing: 2px; color: var(--dimmer); }
+
+    /* ════════════════════════════════════════
+       PREVIEW MODAL
+    ════════════════════════════════════════ */
+    #preview-modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(9,9,14,0.92); z-index: 200;
+      align-items: center; justify-content: center;
+      padding: 24px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    #preview-modal.show { display: flex; animation: up 0.25s ease both; }
+    .preview-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 28px 24px;
+      width: 100%; max-width: 360px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .preview-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 4px;
+    }
+    .preview-root { font-size: 52px; font-weight: 300; line-height: 1; }
+    .preview-type { font-size: 17px; font-style: italic; color: var(--gold); }
+    #preview-close {
+      background: none; border: none; color: var(--dimmer);
+      font-size: 20px; cursor: pointer; padding: 0;
+    }
+    .preview-notes {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-top: 8px;
+    }
+    .preview-note {
+      font-family: var(--mono); font-size: 13px;
+      border: 1px solid var(--border); border-radius: 3px;
+      padding: 7px 10px; color: var(--fg);
+    }
+    .preview-note.root { border-color: var(--gold); color: var(--gold); }
+    .preview-intervals {
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 2px; color: var(--dimmer);
+      margin-top: 6px;
+    }
+    .preview-desc {
+      font-size: 14px; font-style: italic;
+      color: var(--dim); line-height: 1.5;
+      margin-top: 4px;
     }
 
-    #quiz-score-display {
-      display: flex;
-      gap: 12px;
-    }
+    /* ════════════════════════════════════════
+       QUIZ
+    ════════════════════════════════════════ */
+    #quiz { padding: 16px 24px 32px; justify-content: flex-start; }
 
-    .qs-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
+    #prog-wrap {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 2px; background: var(--border); z-index: 50;
     }
+    #prog-bar { height: 100%; background: var(--gold); transition: width 0.4s ease; }
 
-    .qs-val {
-      font-family: var(--mono);
-      font-size: 16px;
-      color: var(--fg);
+    #quiz-bar {
+      width: 100%; display: flex; align-items: center;
+      justify-content: space-between; padding: 8px 0 14px;
+      flex-shrink: 0;
     }
-
-    .qs-label {
-      font-family: var(--mono);
-      font-size: 8px;
-      letter-spacing: 2px;
-      color: var(--dimmer);
-    }
-
+    #q-counter { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 2px; }
+    .q-scores { display: flex; gap: 14px; }
+    .qscore { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+    .qscore-v { font-family: var(--mono); font-size: 15px; color: var(--fg); }
+    .qscore-l { font-family: var(--mono); font-size: 7px; letter-spacing: 2px; color: var(--dimmer); }
     #exit-btn {
-      background: none;
-      border: none;
-      color: var(--dimmer);
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 2px;
-      cursor: pointer;
-      padding: 4px 0;
-      -webkit-appearance: none;
+      background: none; border: none;
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 2px; color: var(--dimmer); cursor: pointer;
     }
 
-    /* Card */
-    #card-wrap {
-      width: 100%;
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      perspective: 1000px;
+    #card-area {
+      width: 100%; flex: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px;
     }
 
     #card {
-      width: 100%;
-      max-width: 360px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 32px 28px 28px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      transition: transform 0.3s ease, opacity 0.3s ease;
+      width: 100%; max-width: 380px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 22px 20px 18px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
     }
+    #card.out  { animation: outL 0.25s ease forwards; }
+    #card.in   { animation: inR  0.25s ease forwards; }
 
-    #card.slide-out-left  { transform: translateX(-60px); opacity: 0; }
-    #card.slide-out-right { transform: translateX(60px);  opacity: 0; }
-    #card.slide-in        { animation: slideIn 0.3s ease forwards; }
+    @keyframes outL { to { transform: translateX(-44px); opacity: 0; } }
+    @keyframes inR  { from { transform: translateX(32px); opacity: 0; } to { transform: none; opacity: 1; } }
 
-    @keyframes slideIn {
-      from { transform: translateX(30px); opacity: 0; }
-      to   { transform: translateX(0);    opacity: 1; }
+    #card-tag {
+      font-family: var(--mono); font-size: 8px;
+      letter-spacing: 4px; color: var(--gold);
+      margin-bottom: 4px; opacity: 0.75;
     }
+    #card-root { font-size: clamp(48px, 15vw, 68px); font-weight: 300; line-height: 1; }
+    #card-type { font-size: clamp(15px, 4.5vw, 19px); font-weight: 300; font-style: italic; color: var(--gold); margin-bottom: 8px; }
+    #card-prompt { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--dim); margin-bottom: 4px; }
 
-    #card-mode-tag {
-      font-family: var(--mono);
-      font-size: 9px;
-      letter-spacing: 3px;
-      color: var(--gold);
-      margin-bottom: 8px;
-      opacity: 0.7;
-      text-transform: uppercase;
-    }
-
-    #card-root {
-      font-size: clamp(48px, 16vw, 72px);
-      font-weight: 300;
-      color: var(--fg);
-      line-height: 1;
-      letter-spacing: -1px;
-    }
-
-    #card-type {
-      font-size: clamp(18px, 5vw, 22px);
-      font-weight: 300;
-      font-style: italic;
-      color: var(--gold);
-      margin-bottom: 12px;
-    }
-
-    #card-question {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 3px;
-      color: var(--dim);
-      margin-bottom: 4px;
-      text-transform: uppercase;
-    }
-
-    /* Note grid */
     #note-grid {
-      width: 100%;
-      display: grid;
+      width: 100%; display: grid;
       grid-template-columns: repeat(6, 1fr);
-      gap: 6px;
-      margin-top: 4px;
+      gap: 5px; margin-bottom: 3px;
     }
 
-    .note-btn {
-      aspect-ratio: 1;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      font-family: var(--mono);
-      font-size: 12px;
-      color: rgba(240,236,228,0.5);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s ease;
-      -webkit-appearance: none;
-      outline: none;
-      padding: 0;
-      position: relative;
-      overflow: hidden;
+    .nbtn {
+      aspect-ratio: 1; background: transparent;
+      border: 1px solid var(--border); border-radius: 3px;
+      font-family: var(--mono); font-size: 11px;
+      color: rgba(237,232,223,0.35); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.12s; -webkit-appearance: none; outline: none;
     }
+    .nbtn:active { transform: scale(0.87); }
+    .nbtn.sel  { border-color: rgba(237,232,223,0.4); background: rgba(237,232,223,0.06); color: var(--fg); }
+    .nbtn.hit  { border-color: var(--green); background: rgba(111,181,138,0.13); color: var(--green); }
+    .nbtn.miss { border-color: rgba(111,181,138,0.28); background: transparent; color: rgba(111,181,138,0.45); }
+    .nbtn.err  { border-color: var(--red); background: rgba(181,111,111,0.13); color: var(--red); }
+    .nbtn.dim  { opacity: 0.15; }
 
-    .note-btn:active { transform: scale(0.92); }
+    #fb-row { min-height: 20px; display: flex; align-items: center; justify-content: center; }
+    #fb-text { font-family: var(--mono); font-size: 9px; letter-spacing: 4px; opacity: 0; transition: opacity 0.22s; }
+    #fb-text.show { opacity: 1; }
+    #fb-text.ok  { color: var(--green); }
+    #fb-text.bad { color: var(--red); }
 
-    .note-btn.selected {
-      border-color: rgba(240,236,228,0.4);
-      background: rgba(240,236,228,0.07);
-      color: var(--fg);
-    }
-
-    .note-btn.correct {
-      border-color: var(--green);
-      background: rgba(126,207,160,0.15);
-      color: var(--green);
-    }
-
-    .note-btn.wrong {
-      border-color: var(--red);
-      background: rgba(207,126,126,0.15);
-      color: var(--red);
-    }
-
-    .note-btn.missed {
-      border-color: rgba(126,207,160,0.4);
-      background: rgba(126,207,160,0.07);
-      color: rgba(126,207,160,0.6);
-    }
-
-    /* Confirm button */
     #confirm-btn {
-      width: 100%;
-      margin-top: 16px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      padding: 14px;
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 4px;
-      color: var(--dim);
-      cursor: pointer;
-      transition: all 0.2s;
-      -webkit-appearance: none;
-      outline: none;
+      width: 100%; background: transparent;
+      border: 1px solid var(--border); border-radius: 3px;
+      padding: 12px; font-family: var(--mono);
+      font-size: 9px; letter-spacing: 4px; color: var(--dim);
+      cursor: pointer; transition: all 0.15s;
+      -webkit-appearance: none; outline: none;
     }
+    #confirm-btn:not(:disabled):active { border-color: var(--gold); color: var(--gold); }
+    #confirm-btn:disabled { opacity: 0.25; cursor: default; }
+    #confirm-btn.revealed { border-color: var(--gold); color: var(--gold); cursor: default; }
 
-    #confirm-btn:not(:disabled):active {
-      border-color: var(--gold);
-      color: var(--gold);
-    }
-
-    #confirm-btn:disabled {
-      opacity: 0.3;
-      cursor: default;
-    }
-
-    #confirm-btn.checking {
-      border-color: var(--gold);
-      color: var(--gold);
-      pointer-events: none;
-    }
-
-    /* Feedback overlay inside card */
-    #feedback-row {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      min-height: 28px;
-      margin-top: 4px;
-    }
-
-    #feedback-text {
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 3px;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    #feedback-text.show { opacity: 1; }
-    #feedback-text.correct { color: var(--green); }
-    #feedback-text.wrong   { color: var(--red); }
-
-    /* Next button */
     #next-btn {
-      width: 100%;
-      max-width: 360px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      padding: 16px;
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 4px;
-      color: var(--dim);
-      cursor: pointer;
-      transition: all 0.2s;
-      -webkit-appearance: none;
-      outline: none;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s, border-color 0.2s, color 0.2s;
-      margin-top: 12px;
+      width: 100%; max-width: 380px; background: transparent;
+      border: 1px solid var(--border); border-radius: 3px;
+      padding: 13px; font-family: var(--mono);
+      font-size: 9px; letter-spacing: 4px; color: var(--dim);
+      cursor: pointer; opacity: 0; pointer-events: none;
+      transition: opacity 0.28s, border-color 0.15s, color 0.15s;
+      -webkit-appearance: none; outline: none;
     }
+    #next-btn.show { opacity: 1; pointer-events: all; }
+    #next-btn:active { border-color: var(--gold); color: var(--gold); }
 
-    #next-btn.visible {
-      opacity: 1;
-      pointer-events: all;
+    /* ════════════════════════════════════════
+       RESULT
+    ════════════════════════════════════════ */
+    #result { justify-content: center; gap: 0; padding: 32px 24px; }
+
+    .res-title { font-size: clamp(46px, 13vw, 60px); font-weight: 300; line-height: 0.95; margin-bottom: 4px; animation: up 0.5s ease 0.05s both; }
+    .res-title em { font-style: italic; color: var(--gold); }
+    .res-sub { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--dim); margin-bottom: 36px; animation: up 0.5s ease 0.1s both; }
+
+    .res-grid {
+      width: 100%; max-width: 340px;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      border: 1px solid var(--border); border-radius: 3px;
+      overflow: hidden; margin-bottom: 36px;
+      animation: up 0.5s ease 0.15s both;
     }
+    .res-cell { display: flex; flex-direction: column; align-items: center; padding: 16px 8px; gap: 5px; border-right: 1px solid var(--border); }
+    .res-cell:last-child { border-right: none; }
+    .res-cell-v { font-family: var(--mono); font-size: 24px; color: var(--fg); font-weight: 300; }
+    .res-cell-l { font-family: var(--mono); font-size: 8px; letter-spacing: 2px; color: var(--dimmer); text-align: center; }
 
-    #next-btn:active {
-      border-color: var(--gold);
-      color: var(--gold);
-    }
+    .res-msg { font-size: 16px; font-style: italic; color: var(--dim); text-align: center; max-width: 260px; line-height: 1.55; margin-bottom: 32px; animation: up 0.5s ease 0.2s both; }
 
-    /* ══════════════════════════════════════════
-       RESULT SCREEN
-    ══════════════════════════════════════════ */
+    .res-actions { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 8px; animation: up 0.5s ease 0.25s both; }
+    .res-btn { width: 100%; border-radius: 3px; padding: 14px; font-family: var(--mono); font-size: 9px; letter-spacing: 4px; cursor: pointer; transition: opacity 0.15s, transform 0.1s; -webkit-appearance: none; outline: none; }
+    .res-btn.pri { background: var(--gold); border: none; color: var(--bg); }
+    .res-btn.sec { background: transparent; border: 1px solid var(--border); color: var(--dim); }
+    .res-btn:active { opacity: 0.8; transform: scale(0.985); }
 
-    #result { gap: 0; }
+    /* install banner */
+    #banner { display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(15,15,23,0.96); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; width: calc(100% - 48px); max-width: 340px; z-index: 400; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+    #banner.show { display: block; animation: up 0.35s ease both; }
+    #banner p { font-family: var(--mono); font-size: 10px; color: var(--dim); line-height: 1.65; }
+    #banner p span { color: var(--fg); }
+    #banner-close { position: absolute; top: 10px; right: 14px; background: none; border: none; color: var(--dimmer); font-size: 18px; cursor: pointer; }
 
-    #result-heading {
-      font-size: clamp(44px, 12vw, 60px);
-      font-weight: 300;
-      color: var(--fg);
-      line-height: 1;
-      margin-bottom: 4px;
-      animation: fadeUp 0.6s ease 0.05s both;
-    }
-
-    #result-heading em { font-style: italic; color: var(--gold); }
-
-    #result-sub {
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 3px;
-      color: var(--dim);
-      margin-bottom: 44px;
-      animation: fadeUp 0.6s ease 0.1s both;
-    }
-
-    #result-stats {
-      display: flex;
-      gap: 0;
-      width: 100%;
-      max-width: 320px;
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      overflow: hidden;
-      margin-bottom: 48px;
-      animation: fadeUp 0.6s ease 0.15s both;
-    }
-
-    .result-stat {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px 12px;
-      gap: 6px;
-      border-right: 1px solid var(--border);
-    }
-
-    .result-stat:last-child { border-right: none; }
-
-    .result-stat-value {
-      font-family: var(--mono);
-      font-size: 28px;
-      color: var(--fg);
-      font-weight: 300;
-    }
-
-    .result-stat-label {
-      font-family: var(--mono);
-      font-size: 8px;
-      letter-spacing: 2px;
-      color: var(--dimmer);
-      text-transform: uppercase;
-      text-align: center;
-    }
-
-    #result-message {
-      font-size: 18px;
-      font-style: italic;
-      color: var(--dim);
-      margin-bottom: 36px;
-      text-align: center;
-      max-width: 280px;
-      line-height: 1.5;
-      animation: fadeUp 0.6s ease 0.2s both;
-    }
-
-    #result-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      width: 100%;
-      max-width: 320px;
-      animation: fadeUp 0.6s ease 0.25s both;
-    }
-
-    .result-btn {
-      width: 100%;
-      border-radius: 3px;
-      padding: 15px 20px;
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 4px;
-      cursor: pointer;
-      transition: all 0.2s;
-      -webkit-appearance: none;
-      outline: none;
-    }
-
-    .result-btn.primary {
-      background: var(--gold);
-      border: none;
-      color: var(--bg);
-    }
-
-    .result-btn.secondary {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--dim);
-    }
-
-    .result-btn:active { opacity: 0.8; transform: scale(0.98); }
-
-    /* ══════════════════════════════════════════
-       ANIMATIONS
-    ══════════════════════════════════════════ */
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(14px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes pop {
-      0%   { transform: scale(1); }
-      40%  { transform: scale(1.12); }
-      100% { transform: scale(1); }
-    }
-
-    .pop { animation: pop 0.2s ease; }
-
-    /* ══════════════════════════════════════════
-       INSTALL BANNER
-    ══════════════════════════════════════════ */
-
-    #install-banner {
-      display: none;
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(17,17,24,0.97);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px 20px;
-      width: calc(100% - 48px);
-      max-width: 340px;
-      z-index: 300;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-    }
-
-    #install-banner.show {
-      display: block;
-      animation: fadeUp 0.4s ease forwards;
-    }
-
-    #install-banner p {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--dim);
-      line-height: 1.6;
-      letter-spacing: 0.5px;
-    }
-
-    #install-banner p span { color: var(--fg); }
-
-    #install-close {
-      position: absolute;
-      top: 12px; right: 14px;
-      background: none; border: none;
-      color: var(--dimmer);
-      font-size: 16px;
-      cursor: pointer;
-    }
+    @keyframes up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.14); } 100% { transform: scale(1); } }
+    .pop { animation: pop 0.17s ease; }
   </style>
 </head>
 <body>
 
 <!-- ══ HOME ══════════════════════════════════════════ -->
 <div id="home" class="screen active">
-  <div id="home-title">FLASHCARDS</div>
-  <div id="home-heading">Esca<em>las</em></div>
-  <div id="home-sub">teoria musical · notas · intervalos</div>
+  <p class="eyebrow">FLASHCARDS MUSICAIS</p>
+  <h1 class="big-title">Esca<em>las</em></h1>
+  <p class="home-sub">MAIOR · MENOR · MODOS GREGOS</p>
 
-  <div id="mode-selector">
-    <button class="mode-btn selected" data-mode="all" onclick="selectMode(this)">
-      <div class="mode-btn-left">
-        <div class="mode-btn-name">Todas as escalas</div>
-        <div class="mode-btn-desc">MAIOR · MENOR NATURAL · MENOR HARMÔNICA · MENOR MELÓDICA</div>
-      </div>
-      <div class="mode-btn-count" id="count-all"></div>
-    </button>
-    <button class="mode-btn" data-mode="major" onclick="selectMode(this)">
-      <div class="mode-btn-left">
-        <div class="mode-btn-name">Escalas Maiores</div>
-        <div class="mode-btn-desc">AS 12 ESCALAS MAIORES</div>
-      </div>
-      <div class="mode-btn-count">12</div>
-    </button>
-    <button class="mode-btn" data-mode="minor" onclick="selectMode(this)">
-      <div class="mode-btn-left">
-        <div class="mode-btn-name">Escalas Menores</div>
-        <div class="mode-btn-desc">NATURAL · HARMÔNICA · MELÓDICA</div>
-      </div>
-      <div class="mode-btn-count">36</div>
-    </button>
+  <!-- GROUP -->
+  <p class="section-label">TIPO DE ESCALA</p>
+  <div class="group-list" id="group-list">
+    <!-- filled by JS -->
   </div>
 
-  <button id="start-btn" onclick="startQuiz()">COMEÇAR</button>
+  <!-- TONIC -->
+  <p class="section-label" style="animation: up 0.5s ease 0.2s both;">TÔNICA</p>
+  <div class="tonic-grid" id="tonic-grid">
+    <!-- filled by JS -->
+  </div>
 
-  <div id="home-stats">
-    <div class="home-stat">
-      <div class="home-stat-value" id="stat-studied">0</div>
-      <div class="home-stat-label">ESTUDADAS</div>
+  <div id="selection-summary"></div>
+
+  <div class="cta-row">
+    <button id="start-btn" onclick="startQuiz()">COMEÇAR</button>
+    <button id="preview-btn" onclick="openPreview()">VER ESCALA</button>
+  </div>
+
+  <div class="home-stats">
+    <div class="hstat"><div class="hstat-v" id="hs-studied">0</div><div class="hstat-l">ESTUDADAS</div></div>
+    <div class="hstat"><div class="hstat-v" id="hs-best">—</div><div class="hstat-l">MELHOR</div></div>
+    <div class="hstat"><div class="hstat-v" id="hs-streak">0</div><div class="hstat-l">RECORDE</div></div>
+  </div>
+</div>
+
+<!-- ══ PREVIEW MODAL ════════════════════════════════ -->
+<div id="preview-modal">
+  <div class="preview-box">
+    <div class="preview-header">
+      <div>
+        <div class="preview-root" id="pv-root">C</div>
+        <div class="preview-type" id="pv-type">Maior</div>
+      </div>
+      <button id="preview-close" onclick="closePreview()">×</button>
     </div>
-    <div class="home-stat">
-      <div class="home-stat-value" id="stat-best">—</div>
-      <div class="home-stat-label">MELHOR</div>
-    </div>
-    <div class="home-stat">
-      <div class="home-stat-value" id="stat-streak">0</div>
-      <div class="home-stat-label">SEQUÊNCIA</div>
-    </div>
+    <div class="preview-notes" id="pv-notes"></div>
+    <div class="preview-intervals" id="pv-intervals"></div>
+    <div class="preview-desc" id="pv-desc"></div>
   </div>
 </div>
 
 <!-- ══ QUIZ ══════════════════════════════════════════ -->
 <div id="quiz" class="screen">
-  <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
-
-  <div id="quiz-top">
-    <div id="quiz-counter">1 / 10</div>
-    <div id="quiz-score-display">
-      <div class="qs-item">
-        <div class="qs-val" id="qs-correct">0</div>
-        <div class="qs-label">CERTAS</div>
-      </div>
-      <div class="qs-item">
-        <div class="qs-val" id="qs-wrong">0</div>
-        <div class="qs-label">ERRADAS</div>
-      </div>
+  <div id="prog-wrap"><div id="prog-bar"></div></div>
+  <div id="quiz-bar">
+    <div id="q-counter">1 / 10</div>
+    <div class="q-scores">
+      <div class="qscore"><div class="qscore-v" id="qs-c">0</div><div class="qscore-l">CERTAS</div></div>
+      <div class="qscore"><div class="qscore-v" id="qs-e">0</div><div class="qscore-l">ERROS</div></div>
     </div>
     <button id="exit-btn" onclick="goHome()">SAIR</button>
   </div>
-
-  <div id="card-wrap">
+  <div id="card-area">
     <div id="card">
-      <div id="card-mode-tag"></div>
+      <div id="card-tag"></div>
       <div id="card-root">C</div>
       <div id="card-type">Maior</div>
-      <div id="card-question">SELECIONE AS NOTAS</div>
+      <div id="card-prompt">SELECIONE AS 7 NOTAS</div>
       <div id="note-grid"></div>
-      <div id="feedback-row">
-        <div id="feedback-text"></div>
-      </div>
-      <button id="confirm-btn" onclick="confirmAnswer()" disabled>CONFIRMAR</button>
+      <div id="fb-row"><div id="fb-text"></div></div>
+      <button id="confirm-btn" disabled onclick="doConfirm()">CONFIRMAR</button>
     </div>
+    <button id="next-btn" onclick="doNext()">PRÓXIMA  →</button>
   </div>
-
-  <button id="next-btn" onclick="nextCard()">PRÓXIMA →</button>
 </div>
 
 <!-- ══ RESULT ════════════════════════════════════════ -->
 <div id="result" class="screen">
-  <div id="result-heading">Res<em>ul</em>tado</div>
-  <div id="result-sub">sessão completa</div>
-
-  <div id="result-stats">
-    <div class="result-stat">
-      <div class="result-stat-value" id="r-correct">0</div>
-      <div class="result-stat-label">Certas</div>
-    </div>
-    <div class="result-stat">
-      <div class="result-stat-value" id="r-wrong">0</div>
-      <div class="result-stat-label">Erradas</div>
-    </div>
-    <div class="result-stat">
-      <div class="result-stat-value" id="r-pct">0%</div>
-      <div class="result-stat-label">Acerto</div>
-    </div>
+  <h2 class="res-title">Ses<em>são</em></h2>
+  <p class="res-sub">completa</p>
+  <div class="res-grid">
+    <div class="res-cell"><div class="res-cell-v" id="r-c">0</div><div class="res-cell-l">CERTAS</div></div>
+    <div class="res-cell"><div class="res-cell-v" id="r-e">0</div><div class="res-cell-l">ERRADAS</div></div>
+    <div class="res-cell"><div class="res-cell-v" id="r-p">—</div><div class="res-cell-l">ACERTO</div></div>
   </div>
-
-  <div id="result-message"></div>
-
-  <div id="result-actions">
-    <button class="result-btn primary" onclick="startQuiz()">JOGAR NOVAMENTE</button>
-    <button class="result-btn secondary" onclick="goHome()">MENU PRINCIPAL</button>
+  <p class="res-msg" id="r-msg"></p>
+  <div class="res-actions">
+    <button class="res-btn pri" onclick="startQuiz()">REPETIR SELEÇÃO</button>
+    <button class="res-btn sec" onclick="goHome()">MENU PRINCIPAL</button>
   </div>
 </div>
 
 <!-- ══ INSTALL BANNER ════════════════════════════════ -->
-<div id="install-banner">
-  <button id="install-close" onclick="dismissBanner()">×</button>
-  <p>Instale como app: toque em <span>Compartilhar ↑</span> e depois <span>"Adicionar à Tela de Início"</span></p>
+<div id="banner">
+  <button id="banner-close" onclick="closeBanner()">×</button>
+  <p>Instale: toque em <span>Compartilhar ↑</span> depois em <span>"Adicionar à Tela de Início"</span></p>
 </div>
 
 <script>
 // ══════════════════════════════════════════════════════
-//  DADOS — Escalas musicais
+//  TEORIA MUSICAL — todos os tipos de escalas
 // ══════════════════════════════════════════════════════
 
-const ALL_NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const CHROMATIC = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 
-// Todos os 12 cromatismos
-const ROOTS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const NOTE_PT = { C:'Dó', 'C#':'Dó#', D:'Ré', 'D#':'Ré#', E:'Mi', F:'Fá', 'F#':'Fá#', G:'Sol', 'G#':'Sol#', A:'Lá', 'A#':'Lá#', B:'Si' };
 
-// Fórmulas de intervalos (em semitons a partir da tônica)
-const FORMULAS = {
-  'Maior':            [0,2,4,5,7,9,11],
-  'Menor Natural':    [0,2,3,5,7,8,10],
-  'Menor Harmônica':  [0,2,3,5,7,8,11],
-  'Menor Melódica':   [0,2,3,5,7,9,11],
-};
+// Cada grupo: { id, label, color, desc, types }
+// types: { name, intervals[], description }
+const GROUPS = [
+  {
+    id: 'major', label: 'Escalas Maiores', color: '#b8955a',
+    types: [
+      { name: 'Maior', intervals: [0,2,4,5,7,9,11],
+        desc: 'A escala mais comum na música ocidental. Tom, tom, semitom, tom, tom, tom, semitom.' },
+    ]
+  },
+  {
+    id: 'minor', label: 'Escalas Menores', color: '#6f8eb5',
+    types: [
+      { name: 'Menor Natural',   intervals: [0,2,3,5,7,8,10],
+        desc: 'Relativa menor da escala maior. Base do sistema tonal menor.' },
+      { name: 'Menor Harmônica', intervals: [0,2,3,5,7,8,11],
+        desc: 'Menor natural com 7ª elevada. Cria o intervalo característico de 2ª aumentada.' },
+      { name: 'Menor Melódica',  intervals: [0,2,3,5,7,9,11],
+        desc: 'Menor natural com 6ª e 7ª elevadas ao subir. Muito usada no jazz.' },
+    ]
+  },
+  {
+    id: 'greek', label: 'Modos Gregos', color: '#9b7ec8',
+    types: [
+      { name: 'Jônio',     intervals: [0,2,4,5,7,9,11],
+        desc: 'Idêntico à escala maior. 1º modo. Sonoridade brilhante e estável.' },
+      { name: 'Dórico',    intervals: [0,2,3,5,7,9,10],
+        desc: '2º modo. Menor com 6ª elevada. Sons: jazz, blues, pop. Ex: So What – Miles Davis.' },
+      { name: 'Frígio',    intervals: [0,1,3,5,7,8,10],
+        desc: '3º modo. 2ª abaixada. Sonoridade espanhola/flamenca, misteriosa.' },
+      { name: 'Lídio',     intervals: [0,2,4,6,7,9,11],
+        desc: '4º modo. Maior com 4ª aumentada (#4). Sonoridade etérea e onírica.' },
+      { name: 'Mixolídio', intervals: [0,2,4,5,7,9,10],
+        desc: '5º modo. Maior com 7ª menor. Muito usado no rock, blues e música celta.' },
+      { name: 'Eólio',     intervals: [0,2,3,5,7,8,10],
+        desc: '6º modo. Idêntico à menor natural. Base da música tonal menor.' },
+      { name: 'Lócrio',    intervals: [0,1,3,5,6,8,10],
+        desc: '7º modo. 2ª e 5ª abaixadas. Sonoridade instável, raramente usado como tônica.' },
+    ]
+  },
+  {
+    id: 'pent', label: 'Pentatônicas', color: '#6fb58a',
+    types: [
+      { name: 'Pentatônica Maior', intervals: [0,2,4,7,9],
+        desc: '5 notas. Maior sem 4ª e 7ª. Universal: folk, pop, country, música asiática.' },
+      { name: 'Pentatônica Menor', intervals: [0,3,5,7,10],
+        desc: '5 notas. Menor sem 2ª e 6ª. Pilar do blues, rock e soul.' },
+      { name: 'Blues',             intervals: [0,3,5,6,7,10],
+        desc: 'Pentatônica menor + 5ª diminuta (blue note). A essência do blues e do jazz.' },
+    ]
+  },
+];
 
-// Gera todas as escalas
-function buildScale(root, type) {
-  const rootIdx = ALL_NOTES.indexOf(root);
-  return FORMULAS[type].map(interval => ALL_NOTES[(rootIdx + interval) % 12]);
+// Flat index: all scale types
+const ALL_TYPES = GROUPS.flatMap(g => g.types.map(t => ({ ...t, group: g })));
+
+function scaleNotes(root, intervals) {
+  const ri = CHROMATIC.indexOf(root);
+  return intervals.map(s => CHROMATIC[(ri + s) % 12]);
 }
 
-function buildAllCards(mode) {
-  const types = mode === 'major' ? ['Maior']
-              : mode === 'minor' ? ['Menor Natural','Menor Harmônica','Menor Melódica']
-              : Object.keys(FORMULAS);
-  const cards = [];
-  for (const root of ROOTS) {
-    for (const type of types) {
-      cards.push({ root, type, notes: buildScale(root, type) });
-    }
-  }
-  return cards;
-}
-
-// Contagens
-document.getElementById('count-all').textContent = 48;
-
-// ══════════════════════════════════════════════════════
-//  PERSISTÊNCIA
-// ══════════════════════════════════════════════════════
-
-let stats = { studied: 0, bestPct: null, streak: 0 };
-
-function loadStats() {
-  try {
-    const s = localStorage.getItem('scales_stats');
-    if (s) stats = JSON.parse(s);
-  } catch(e) {}
-}
-
-function saveStats() {
-  try { localStorage.setItem('scales_stats', JSON.stringify(stats)); } catch(e) {}
-}
-
-function updateHomeStats() {
-  document.getElementById('stat-studied').textContent = stats.studied;
-  document.getElementById('stat-best').textContent    = stats.bestPct !== null ? stats.bestPct + '%' : '—';
-  document.getElementById('stat-streak').textContent  = stats.streak;
+// interval name helpers
+function intervalNames(intervals) {
+  const names = ['1','b2','2','b3','3','4','b5/4#','5','b6','6','b7','7'];
+  return intervals.map(i => names[i]).join('  ');
 }
 
 // ══════════════════════════════════════════════════════
-//  ESTADO DO QUIZ
+//  STATE
 // ══════════════════════════════════════════════════════
 
-let deck        = [];
-let cardIndex   = 0;
-let sessionCorrect = 0;
-let sessionWrong   = 0;
-let selectedMode   = 'all';
-let selectedNotes  = new Set();
-let answered       = false;
-let currentStreak  = 0;
+let selectedGroups = new Set(['major']); // group ids
+let selectedTonics = new Set(['C']);     // 'ALL' or specific notes
 
-const CARDS_PER_SESSION = 10;
+// Quiz state
+const PER_SESSION = 10;
+let deck = [], ci = 0, nC = 0, nE = 0, answered = false, streak = 0, picked = new Set();
+
+// Stats
+let db = { studied: 0, best: null, streak: 0 };
+function dbLoad() { try { const s = localStorage.getItem('sc2_db'); if (s) db = JSON.parse(s); } catch(e) {} }
+function dbSave() { try { localStorage.setItem('sc2_db', JSON.stringify(db)); } catch(e) {} }
 
 // ══════════════════════════════════════════════════════
-//  NAVEGAÇÃO
+//  NAVIGATION
 // ══════════════════════════════════════════════════════
 
-function showScreen(id) {
+function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-function goHome() {
-  showScreen('home');
-  updateHomeStats();
+function goHome() { show('home'); renderHomeStats(); updateSummary(); }
+
+// ══════════════════════════════════════════════════════
+//  BUILD HOME UI
+// ══════════════════════════════════════════════════════
+
+function buildGroupUI() {
+  const el = document.getElementById('group-list');
+
+  // "Todas" button
+  const allBtn = document.createElement('button');
+  allBtn.className = 'group-btn wide' + (selectedGroups.has('ALL') ? ' sel' : '');
+  allBtn.dataset.gid = 'ALL';
+  allBtn.innerHTML = `<div class="gb-name">Todas as escalas</div><div class="gb-sub">${ALL_TYPES.length} TIPOS × 12 TÔNICAS</div>`;
+  allBtn.onclick = () => toggleGroup(allBtn, 'ALL');
+  el.appendChild(allBtn);
+
+  // Row of individual groups
+  const row = document.createElement('div');
+  row.className = 'group-row';
+  for (const g of GROUPS) {
+    const btn = document.createElement('button');
+    btn.className = 'group-btn' + (selectedGroups.has(g.id) ? ' sel' : '');
+    btn.dataset.gid = g.id;
+    btn.style.setProperty('--gc', g.color);
+    btn.innerHTML = `<span class="gb-name" style="color:${selectedGroups.has(g.id)?g.color:'inherit'}">${g.label.split(' ')[g.label.split(' ').length-1]}</span><span class="gb-sub">${g.types.length} tipo${g.types.length>1?'s':''}</span>`;
+    btn.onclick = () => toggleGroup(btn, g.id);
+    row.appendChild(btn);
+  }
+  el.appendChild(row);
+}
+
+function toggleGroup(btn, gid) {
+  if (gid === 'ALL') {
+    if (selectedGroups.has('ALL')) {
+      selectedGroups.clear();
+    } else {
+      selectedGroups.clear();
+      selectedGroups.add('ALL');
+    }
+  } else {
+    selectedGroups.delete('ALL');
+    if (selectedGroups.has(gid)) {
+      if (selectedGroups.size > 1) selectedGroups.delete(gid);
+    } else {
+      selectedGroups.add(gid);
+    }
+  }
+  refreshGroupUI();
+  updateSummary();
+}
+
+function refreshGroupUI() {
+  document.querySelectorAll('.group-btn').forEach(btn => {
+    const gid = btn.dataset.gid;
+    const sel = selectedGroups.has(gid);
+    btn.classList.toggle('sel', sel);
+    const g = GROUPS.find(x => x.id === gid);
+    const nameEl = btn.querySelector('.gb-name');
+    if (nameEl && g) nameEl.style.color = sel ? g.color : '';
+  });
+}
+
+function buildTonicUI() {
+  const el = document.getElementById('tonic-grid');
+
+  // "Todas" button
+  const allBtn = document.createElement('button');
+  allBtn.className = 'tonic-btn all-tonic' + (selectedTonics.has('ALL') ? ' sel' : '');
+  allBtn.dataset.note = 'ALL';
+  allBtn.textContent = 'TODAS AS TÔNICAS';
+  allBtn.onclick = () => toggleTonic(allBtn, 'ALL');
+  el.appendChild(allBtn);
+
+  // Individual notes
+  for (const note of CHROMATIC) {
+    const btn = document.createElement('button');
+    btn.className = 'tonic-btn' + (selectedTonics.has(note) ? ' sel' : '');
+    btn.dataset.note = note;
+    btn.innerHTML = note.includes('#')
+      ? `${note[0]}<sup style="font-size:8px">#</sup>`
+      : NOTE_PT[note];
+    btn.onclick = () => toggleTonic(btn, note);
+    el.appendChild(btn);
+  }
+}
+
+function toggleTonic(btn, note) {
+  if (note === 'ALL') {
+    if (selectedTonics.has('ALL')) selectedTonics.clear();
+    else { selectedTonics.clear(); selectedTonics.add('ALL'); }
+  } else {
+    selectedTonics.delete('ALL');
+    if (selectedTonics.has(note)) {
+      if (selectedTonics.size > 1) selectedTonics.delete(note);
+    } else {
+      selectedTonics.add(note);
+    }
+  }
+  document.querySelectorAll('.tonic-btn').forEach(b => {
+    b.classList.toggle('sel', selectedTonics.has(b.dataset.note));
+  });
+  updateSummary();
+}
+
+function getActiveDeck() {
+  // types
+  let types;
+  if (selectedGroups.has('ALL')) {
+    types = ALL_TYPES;
+  } else {
+    types = GROUPS.filter(g => selectedGroups.has(g.id)).flatMap(g => g.types.map(t => ({ ...t, group: g })));
+  }
+  // tonics
+  const tonics = selectedTonics.has('ALL') ? CHROMATIC : [...selectedTonics];
+  // build
+  const cards = [];
+  for (const root of tonics)
+    for (const t of types)
+      cards.push({ root, type: t, notes: scaleNotes(root, t.intervals) });
+  return cards;
+}
+
+function updateSummary() {
+  const total = getActiveDeck().length;
+  const tonics = selectedTonics.has('ALL') ? 12 : selectedTonics.size;
+  const types  = selectedGroups.has('ALL') ? ALL_TYPES.length
+    : GROUPS.filter(g => selectedGroups.has(g.id)).flatMap(g => g.types).length;
+  document.getElementById('selection-summary').textContent =
+    `${types} tipo${types!==1?'s':''} × ${tonics} tônica${tonics!==1?'s':''} = ${total} card${total!==1?'s':''}`;
+}
+
+function renderHomeStats() {
+  document.getElementById('hs-studied').textContent = db.studied;
+  document.getElementById('hs-best').textContent    = db.best !== null ? db.best + '%' : '—';
+  document.getElementById('hs-streak').textContent  = db.streak;
 }
 
 // ══════════════════════════════════════════════════════
-//  HOME
+//  PREVIEW
 // ══════════════════════════════════════════════════════
 
-function selectMode(btn) {
-  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  selectedMode = btn.dataset.mode;
+function openPreview() {
+  // pick single tonic & type from selection
+  const tonics = selectedTonics.has('ALL') ? CHROMATIC : [...selectedTonics];
+  const root = tonics[0];
+
+  let typeObj;
+  if (selectedGroups.has('ALL')) typeObj = { ...ALL_TYPES[0], group: GROUPS[0] };
+  else {
+    const g = GROUPS.find(g => selectedGroups.has(g.id));
+    typeObj = { ...g.types[0], group: g };
+  }
+
+  const notes = scaleNotes(root, typeObj.intervals);
+
+  document.getElementById('pv-root').textContent = root;
+  document.getElementById('pv-type').textContent = typeObj.name;
+  document.getElementById('pv-type').style.color = typeObj.group.color;
+
+  const notesEl = document.getElementById('pv-notes');
+  notesEl.innerHTML = notes.map((n, i) =>
+    `<span class="preview-note ${i===0?'root':''}" style="${i===0?'border-color:'+typeObj.group.color+';color:'+typeObj.group.color:''}">${n}</span>`
+  ).join('');
+
+  document.getElementById('pv-intervals').textContent = intervalNames(typeObj.intervals);
+  document.getElementById('pv-desc').textContent = typeObj.desc;
+
+  document.getElementById('preview-modal').classList.add('show');
+}
+
+function closePreview() {
+  document.getElementById('preview-modal').classList.remove('show');
 }
 
 // ══════════════════════════════════════════════════════
 //  QUIZ
 // ══════════════════════════════════════════════════════
 
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+function shuffle(a) {
+  const b = [...a];
+  for (let i = b.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]]; }
+  return b;
 }
 
 function startQuiz() {
-  const all = buildAllCards(selectedMode);
-  deck = shuffle(all).slice(0, CARDS_PER_SESSION);
-  cardIndex      = 0;
-  sessionCorrect = 0;
-  sessionWrong   = 0;
-  currentStreak  = 0;
-
-  showScreen('quiz');
+  const all = getActiveDeck();
+  if (all.length === 0) return;
+  deck = shuffle(all).slice(0, PER_SESSION);
+  ci = 0; nC = 0; nE = 0; streak = 0;
+  show('quiz');
   renderCard();
 }
 
 function renderCard() {
-  const card = deck[cardIndex];
-  answered = false;
-  selectedNotes.clear();
+  const card = deck[ci];
+  answered = false; picked.clear();
 
-  // Progress
-  const pct = (cardIndex / CARDS_PER_SESSION) * 100;
-  document.getElementById('progress-bar').style.width = pct + '%';
-  document.getElementById('quiz-counter').textContent = `${cardIndex + 1} / ${CARDS_PER_SESSION}`;
-  document.getElementById('qs-correct').textContent   = sessionCorrect;
-  document.getElementById('qs-wrong').textContent     = sessionWrong;
+  document.getElementById('prog-bar').style.width = (ci / PER_SESSION * 100) + '%';
+  document.getElementById('q-counter').textContent = `${ci+1} / ${Math.min(PER_SESSION, deck.length)}`;
+  document.getElementById('qs-c').textContent = nC;
+  document.getElementById('qs-e').textContent = nE;
 
-  // Card content
-  const typeColors = {
-    'Maior':           '#c9a96e',
-    'Menor Natural':   '#8eaecf',
-    'Menor Harmônica': '#cf8eae',
-    'Menor Melódica':  '#8ecfae',
-  };
-
-  document.getElementById('card-mode-tag').textContent = card.type.toUpperCase();
-  document.getElementById('card-mode-tag').style.color = typeColors[card.type] || 'var(--gold)';
+  const col = card.type.group?.color || '#b8955a';
+  document.getElementById('card-tag').textContent = card.type.name.toUpperCase();
+  document.getElementById('card-tag').style.color = col;
   document.getElementById('card-root').textContent = card.root;
-  document.getElementById('card-type').textContent = card.type;
-  document.getElementById('card-type').style.color = typeColors[card.type] || 'var(--gold)';
+  document.getElementById('card-type').textContent = card.type.name;
+  document.getElementById('card-type').style.color = col;
 
-  // Feedback reset
-  const fb = document.getElementById('feedback-text');
-  fb.textContent = '';
-  fb.className = 'feedback-text';
+  const noteCount = card.notes.length;
+  document.getElementById('card-prompt').textContent = `SELECIONE AS ${noteCount} NOTAS`;
 
-  // Confirm reset
-  const confirmBtn = document.getElementById('confirm-btn');
-  confirmBtn.textContent = 'CONFIRMAR';
-  confirmBtn.disabled = true;
-  confirmBtn.className = '';
+  const fb = document.getElementById('fb-text');
+  fb.textContent = ''; fb.className = '';
 
-  // Next btn
-  document.getElementById('next-btn').classList.remove('visible');
+  const cb = document.getElementById('confirm-btn');
+  cb.textContent = 'CONFIRMAR'; cb.disabled = true; cb.className = '';
 
-  // Note grid — shuffle display order
+  document.getElementById('next-btn').classList.remove('show');
+
   const grid = document.getElementById('note-grid');
   grid.innerHTML = '';
-  const displayNotes = shuffle(ALL_NOTES);
-
-  for (const note of displayNotes) {
-    const btn = document.createElement('button');
-    btn.className = 'note-btn';
-    btn.textContent = note;
-    btn.dataset.note = note;
-    btn.onclick = () => toggleNote(btn, note);
-    grid.appendChild(btn);
+  for (const note of shuffle(CHROMATIC)) {
+    const b = document.createElement('button');
+    b.className = 'nbtn'; b.textContent = note; b.dataset.note = note;
+    b.onclick = () => toggleNote(b, note);
+    grid.appendChild(b);
   }
 
-  // Animate card in
   const cardEl = document.getElementById('card');
-  cardEl.classList.remove('slide-out-left', 'slide-out-right', 'slide-in');
+  cardEl.classList.remove('out','in');
   void cardEl.offsetWidth;
-  cardEl.classList.add('slide-in');
+  cardEl.classList.add('in');
 }
 
 function toggleNote(btn, note) {
   if (answered) return;
-
-  if (selectedNotes.has(note)) {
-    selectedNotes.delete(note);
-    btn.classList.remove('selected');
-  } else {
-    selectedNotes.add(note);
-    btn.classList.add('selected');
+  if (picked.has(note)) { picked.delete(note); btn.classList.remove('sel'); }
+  else {
+    picked.add(note); btn.classList.add('sel');
     btn.classList.add('pop');
     btn.addEventListener('animationend', () => btn.classList.remove('pop'), { once: true });
   }
-
-  document.getElementById('confirm-btn').disabled = selectedNotes.size === 0;
+  document.getElementById('confirm-btn').disabled = picked.size === 0;
 }
 
-function confirmAnswer() {
-  if (answered || selectedNotes.size === 0) return;
+function doConfirm() {
+  if (answered || picked.size === 0) return;
   answered = true;
 
-  const card    = deck[cardIndex];
+  const card    = deck[ci];
   const correct = new Set(card.notes);
-  const selected = selectedNotes;
+  const isRight = [...correct].every(n => picked.has(n)) && [...picked].every(n => correct.has(n));
 
-  // Check
-  const isCorrect = [...correct].every(n => selected.has(n)) &&
-                    [...selected].every(n => correct.has(n));
-
-  // Color all note buttons
-  document.querySelectorAll('.note-btn').forEach(btn => {
-    const note = btn.dataset.note;
-    const inCorrect  = correct.has(note);
-    const inSelected = selected.has(note);
-
-    if (inCorrect && inSelected) {
-      btn.className = 'note-btn correct';  // acertou
-    } else if (!inCorrect && inSelected) {
-      btn.className = 'note-btn wrong';    // errou (selecionou errado)
-    } else if (inCorrect && !inSelected) {
-      btn.className = 'note-btn missed';   // não selecionou mas era correto
-    } else {
-      btn.className = 'note-btn';
-      btn.style.opacity = '0.25';
-    }
+  document.querySelectorAll('.nbtn').forEach(b => {
+    const n = b.dataset.note, inC = correct.has(n), inP = picked.has(n);
+    b.className = inC && inP ? 'nbtn hit' : !inC && inP ? 'nbtn err' : inC && !inP ? 'nbtn miss' : 'nbtn dim';
   });
 
-  // Feedback
-  const fb = document.getElementById('feedback-text');
-  if (isCorrect) {
-    fb.textContent = 'CORRETO';
-    fb.className = 'correct show';
-    sessionCorrect++;
-    currentStreak++;
-  } else {
-    fb.textContent = 'INCORRETO';
-    fb.className = 'wrong show';
-    sessionWrong++;
-    currentStreak = 0;
-  }
+  const fb = document.getElementById('fb-text');
+  if (isRight) { fb.textContent = 'CORRETO'; fb.className = 'ok show'; nC++; streak++; }
+  else         { fb.textContent = 'INCORRETO'; fb.className = 'bad show'; nE++; streak = 0; }
 
-  document.getElementById('feedback-text').classList.add('show');
-  document.getElementById('qs-correct').textContent = sessionCorrect;
-  document.getElementById('qs-wrong').textContent   = sessionWrong;
+  document.getElementById('qs-c').textContent = nC;
+  document.getElementById('qs-e').textContent = nE;
 
-  // Confirm → shows notes
-  const confirmBtn = document.getElementById('confirm-btn');
-  confirmBtn.textContent = 'VER NOTAS CORRETAS ↑';
-  confirmBtn.className = 'checking';
-  confirmBtn.disabled = true;
+  const cb = document.getElementById('confirm-btn');
+  cb.textContent = 'NOTAS CORRETAS ↑'; cb.className = 'revealed'; cb.disabled = true;
 
-  // Show next
-  setTimeout(() => {
-    document.getElementById('next-btn').classList.add('visible');
-  }, 400);
+  setTimeout(() => document.getElementById('next-btn').classList.add('show'), 360);
 }
 
-function nextCard() {
-  cardIndex++;
-
-  if (cardIndex >= CARDS_PER_SESSION) {
-    finishQuiz();
-    return;
-  }
-
-  // Animate out
+function doNext() {
+  ci++;
+  if (ci >= Math.min(PER_SESSION, deck.length)) { finish(); return; }
   const cardEl = document.getElementById('card');
-  cardEl.classList.add('slide-out-left');
-  setTimeout(renderCard, 280);
+  cardEl.classList.add('out');
+  setTimeout(renderCard, 240);
 }
 
-function finishQuiz() {
-  const total = sessionCorrect + sessionWrong;
-  const pct   = total > 0 ? Math.round((sessionCorrect / total) * 100) : 0;
+function finish() {
+  const total = nC + nE;
+  const pct   = total ? Math.round(nC / total * 100) : 0;
 
-  // Update stats
-  stats.studied += total;
-  if (stats.bestPct === null || pct > stats.bestPct) stats.bestPct = pct;
-  if (currentStreak > stats.streak) stats.streak = currentStreak;
-  saveStats();
+  db.studied += total;
+  if (db.best === null || pct > db.best) db.best = pct;
+  if (streak > db.streak) db.streak = streak;
+  dbSave();
 
-  // Result screen
-  document.getElementById('r-correct').textContent = sessionCorrect;
-  document.getElementById('r-wrong').textContent   = sessionWrong;
-  document.getElementById('r-pct').textContent     = pct + '%';
+  document.getElementById('r-c').textContent = nC;
+  document.getElementById('r-e').textContent = nE;
+  document.getElementById('r-p').textContent = pct + '%';
 
-  const messages = [
-    [90, 'Excelente! Você domina as escalas.'],
-    [70, 'Muito bem! Continue praticando.'],
-    [50, 'Bom progresso. As escalas pedem mais atenção.'],
-    [0,  'Continue estudando. A prática leva à perfeição.'],
+  const msgs = [
+    [90, 'Domínio impressionante. As escalas são suas.'],
+    [70, 'Muito bem! A teoria está se tornando instinto.'],
+    [50, 'Bom progresso. Revise as que erraste.'],
+    [0,  'A prática diária transforma teoria em música.'],
   ];
-  const msg = messages.find(([threshold]) => pct >= threshold);
-  document.getElementById('result-message').textContent = msg[1];
+  document.getElementById('r-msg').textContent = msgs.find(([t]) => pct >= t)[1];
 
-  document.getElementById('progress-bar').style.width = '100%';
-  showScreen('result');
+  document.getElementById('prog-bar').style.width = '100%';
+  show('result');
 }
 
 // ══════════════════════════════════════════════════════
-//  INSTALL BANNER (iOS)
+//  INSTALL BANNER
 // ══════════════════════════════════════════════════════
 
-function isIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
-function isStandalone() { return window.navigator.standalone === true; }
-
-function dismissBanner() {
-  document.getElementById('install-banner').classList.remove('show');
-  try { localStorage.setItem('scales_banner_dismissed', '1'); } catch(e) {}
+function closeBanner() {
+  document.getElementById('banner').classList.remove('show');
+  try { localStorage.setItem('sc2_banner', '1'); } catch(e) {}
 }
 
-function maybeShowBanner() {
-  if (!isIOS() || isStandalone()) return;
-  try { if (localStorage.getItem('scales_banner_dismissed')) return; } catch(e) {}
-  setTimeout(() => document.getElementById('install-banner').classList.add('show'), 2500);
+function maybeBanner() {
+  if (!/iphone|ipad|ipod/i.test(navigator.userAgent) || window.navigator.standalone) return;
+  try { if (localStorage.getItem('sc2_banner')) return; } catch(e) {}
+  setTimeout(() => document.getElementById('banner').classList.add('show'), 2500);
 }
 
 // ══════════════════════════════════════════════════════
 //  SERVICE WORKER
 // ══════════════════════════════════════════════════════
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
-  });
-}
+if ('serviceWorker' in navigator)
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 
 // ══════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════
 
-loadStats();
-updateHomeStats();
-maybeShowBanner();
+dbLoad();
+buildGroupUI();
+buildTonicUI();
+updateSummary();
+renderHomeStats();
+maybeBanner();
 </script>
 </body>
 </html>

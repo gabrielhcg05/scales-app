@@ -1,18 +1,11 @@
 {
   "name": "Escalas Musicais",
   "short_name": "Escalas",
-  "description": "Flashcards de escalas musicais maiores e menores",
+  "description": "Flashcards de escalas maiores e menores",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0a0a0f",
-  "theme_color": "#0a0a0f",
+  "background_color": "#09090e",
+  "theme_color": "#09090e",
   "orientation": "portrait",
-  "icons": [
-    {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ]
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
 }
