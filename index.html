@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Escalas">
+  <meta name="theme-color" content="#0a0a0f">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <title>Escalas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=block" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0f;
+      --surface:  #111118;
+      --border:   rgba(255,255,255,0.07);
+      --fg:       #f0ece4;
+      --dim:      rgba(240,236,228,0.35);
+      --dimmer:   rgba(240,236,228,0.12);
+      --gold:     #c9a96e;
+      --gold-dim: rgba(201,169,110,0.25);
+      --green:    #7ecfa0;
+      --red:      #cf7e7e;
+      --serif:    'Cormorant Garamond', Georgia, serif;
+      --mono:     'DM Mono', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--serif);
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      user-select: none;
+    }
+
+    /* ── Noise texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 200;
+      opacity: 0.6;
+    }
+
+    /* ── Subtle vignette ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ══════════════════════════════════════════
+       SCREENS
+    ══════════════════════════════════════════ */
+
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 28px;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ══════════════════════════════════════════
+       HOME SCREEN
+    ══════════════════════════════════════════ */
+
+    #home {
+      gap: 0;
+    }
+
+    #home-title {
+      font-size: 11px;
+      letter-spacing: 8px;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-weight: 300;
+      margin-bottom: 8px;
+      animation: fadeUp 0.7s ease 0.1s both;
+    }
+
+    #home-heading {
+      font-size: clamp(52px, 14vw, 72px);
+      font-weight: 300;
+      color: var(--fg);
+      line-height: 0.95;
+      letter-spacing: -1px;
+      margin-bottom: 6px;
+      animation: fadeUp 0.7s ease 0.15s both;
+    }
+
+    #home-heading em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    #home-sub {
+      font-size: 13px;
+      color: var(--dim);
+      font-family: var(--mono);
+      letter-spacing: 1px;
+      margin-bottom: 52px;
+      animation: fadeUp 0.7s ease 0.2s both;
+    }
+
+    /* Mode selector */
+    #mode-selector {
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 36px;
+      animation: fadeUp 0.7s ease 0.25s both;
+    }
+
+    .mode-btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      -webkit-appearance: none;
+      outline: none;
+    }
+
+    .mode-btn:active, .mode-btn.selected {
+      border-color: var(--gold);
+      background: var(--gold-dim);
+    }
+
+    .mode-btn-left {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+    }
+
+    .mode-btn-name {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 300;
+      color: var(--fg);
+      letter-spacing: 0.5px;
+    }
+
+    .mode-btn-desc {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--dim);
+      letter-spacing: 1px;
+    }
+
+    .mode-btn-count {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--dimmer);
+      letter-spacing: 1px;
+    }
+
+    #start-btn {
+      width: 100%;
+      max-width: 340px;
+      background: var(--gold);
+      border: none;
+      border-radius: 3px;
+      padding: 16px 20px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: var(--bg);
+      font-weight: 400;
+      cursor: pointer;
+      transition: all 0.2s;
+      -webkit-appearance: none;
+      outline: none;
+      animation: fadeUp 0.7s ease 0.3s both;
+    }
+
+    #start-btn:active {
+      opacity: 0.8;
+      transform: scale(0.98);
+    }
+
+    #home-stats {
+      margin-top: 28px;
+      display: flex;
+      gap: 32px;
+      animation: fadeUp 0.7s ease 0.35s both;
+    }
+
+    .home-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .home-stat-value {
+      font-family: var(--mono);
+      font-size: 20px;
+      color: var(--fg);
+      font-weight: 300;
+    }
+
+    .home-stat-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--dimmer);
+      text-transform: uppercase;
+    }
+
+    /* ══════════════════════════════════════════
+       QUIZ SCREEN
+    ══════════════════════════════════════════ */
+
+    #quiz { justify-content: space-between; padding-top: 56px; padding-bottom: 40px; }
+
+    /* Progress bar */
+    #progress-bar-wrap {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--border);
+      z-index: 50;
+    }
+
+    #progress-bar {
+      height: 100%;
+      background: var(--gold);
+      transition: width 0.4s ease;
+    }
+
+    /* Top row */
+    #quiz-top {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    #quiz-counter {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 2px;
+    }
+
+    #quiz-score-display {
+      display: flex;
+      gap: 12px;
+    }
+
+    .qs-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .qs-val {
+      font-family: var(--mono);
+      font-size: 16px;
+      color: var(--fg);
+    }
+
+    .qs-label {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 2px;
+      color: var(--dimmer);
+    }
+
+    #exit-btn {
+      background: none;
+      border: none;
+      color: var(--dimmer);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      padding: 4px 0;
+      -webkit-appearance: none;
+    }
+
+    /* Card */
+    #card-wrap {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 1000px;
+    }
+
+    #card {
+      width: 100%;
+      max-width: 360px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 32px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    #card.slide-out-left  { transform: translateX(-60px); opacity: 0; }
+    #card.slide-out-right { transform: translateX(60px);  opacity: 0; }
+    #card.slide-in        { animation: slideIn 0.3s ease forwards; }
+
+    @keyframes slideIn {
+      from { transform: translateX(30px); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+
+    #card-mode-tag {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      margin-bottom: 8px;
+      opacity: 0.7;
+      text-transform: uppercase;
+    }
+
+    #card-root {
+      font-size: clamp(48px, 16vw, 72px);
+      font-weight: 300;
+      color: var(--fg);
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+
+    #card-type {
+      font-size: clamp(18px, 5vw, 22px);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    #card-question {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--dim);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    /* Note grid */
+    #note-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .note-btn {
+      aspect-ratio: 1;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: rgba(240,236,228,0.5);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      -webkit-appearance: none;
+      outline: none;
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .note-btn:active { transform: scale(0.92); }
+
+    .note-btn.selected {
+      border-color: rgba(240,236,228,0.4);
+      background: rgba(240,236,228,0.07);
+      color: var(--fg);
+    }
+
+    .note-btn.correct {
+      border-color: var(--green);
+      background: rgba(126,207,160,0.15);
+      color: var(--green);
+    }
+
+    .note-btn.wrong {
+      border-color: var(--red);
+      background: rgba(207,126,126,0.15);
+      color: var(--red);
+    }
+
+    .note-btn.missed {
+      border-color: rgba(126,207,160,0.4);
+      background: rgba(126,207,160,0.07);
+      color: rgba(126,207,160,0.6);
+    }
+
+    /* Confirm button */
+    #confirm-btn {
+      width: 100%;
+      margin-top: 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--dim);
+      cursor: pointer;
+      transition: all 0.2s;
+      -webkit-appearance: none;
+      outline: none;
+    }
+
+    #confirm-btn:not(:disabled):active {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    #confirm-btn:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    #confirm-btn.checking {
+      border-color: var(--gold);
+      color: var(--gold);
+      pointer-events: none;
+    }
+
+    /* Feedback overlay inside card */
+    #feedback-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 28px;
+      margin-top: 4px;
+    }
+
+    #feedback-text {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 3px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    #feedback-text.show { opacity: 1; }
+    #feedback-text.correct { color: var(--green); }
+    #feedback-text.wrong   { color: var(--red); }
+
+    /* Next button */
+    #next-btn {
+      width: 100%;
+      max-width: 360px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 16px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--dim);
+      cursor: pointer;
+      transition: all 0.2s;
+      -webkit-appearance: none;
+      outline: none;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, border-color 0.2s, color 0.2s;
+      margin-top: 12px;
+    }
+
+    #next-btn.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #next-btn:active {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    /* ══════════════════════════════════════════
+       RESULT SCREEN
+    ══════════════════════════════════════════ */
+
+    #result { gap: 0; }
+
+    #result-heading {
+      font-size: clamp(44px, 12vw, 60px);
+      font-weight: 300;
+      color: var(--fg);
+      line-height: 1;
+      margin-bottom: 4px;
+      animation: fadeUp 0.6s ease 0.05s both;
+    }
+
+    #result-heading em { font-style: italic; color: var(--gold); }
+
+    #result-sub {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--dim);
+      margin-bottom: 44px;
+      animation: fadeUp 0.6s ease 0.1s both;
+    }
+
+    #result-stats {
+      display: flex;
+      gap: 0;
+      width: 100%;
+      max-width: 320px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 48px;
+      animation: fadeUp 0.6s ease 0.15s both;
+    }
+
+    .result-stat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 12px;
+      gap: 6px;
+      border-right: 1px solid var(--border);
+    }
+
+    .result-stat:last-child { border-right: none; }
+
+    .result-stat-value {
+      font-family: var(--mono);
+      font-size: 28px;
+      color: var(--fg);
+      font-weight: 300;
+    }
+
+    .result-stat-label {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 2px;
+      color: var(--dimmer);
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    #result-message {
+      font-size: 18px;
+      font-style: italic;
+      color: var(--dim);
+      margin-bottom: 36px;
+      text-align: center;
+      max-width: 280px;
+      line-height: 1.5;
+      animation: fadeUp 0.6s ease 0.2s both;
+    }
+
+    #result-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 320px;
+      animation: fadeUp 0.6s ease 0.25s both;
+    }
+
+    .result-btn {
+      width: 100%;
+      border-radius: 3px;
+      padding: 15px 20px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      -webkit-appearance: none;
+      outline: none;
+    }
+
+    .result-btn.primary {
+      background: var(--gold);
+      border: none;
+      color: var(--bg);
+    }
+
+    .result-btn.secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--dim);
+    }
+
+    .result-btn:active { opacity: 0.8; transform: scale(0.98); }
+
+    /* ══════════════════════════════════════════
+       ANIMATIONS
+    ══════════════════════════════════════════ */
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+
+    .pop { animation: pop 0.2s ease; }
+
+    /* ══════════════════════════════════════════
+       INSTALL BANNER
+    ══════════════════════════════════════════ */
+
+    #install-banner {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(17,17,24,0.97);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      width: calc(100% - 48px);
+      max-width: 340px;
+      z-index: 300;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    #install-banner.show {
+      display: block;
+      animation: fadeUp 0.4s ease forwards;
+    }
+
+    #install-banner p {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--dim);
+      line-height: 1.6;
+      letter-spacing: 0.5px;
+    }
+
+    #install-banner p span { color: var(--fg); }
+
+    #install-close {
+      position: absolute;
+      top: 12px; right: 14px;
+      background: none; border: none;
+      color: var(--dimmer);
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ HOME ══════════════════════════════════════════ -->
+<div id="home" class="screen active">
+  <div id="home-title">FLASHCARDS</div>
+  <div id="home-heading">Esca<em>las</em></div>
+  <div id="home-sub">teoria musical · notas · intervalos</div>
+
+  <div id="mode-selector">
+    <button class="mode-btn selected" data-mode="all" onclick="selectMode(this)">
+      <div class="mode-btn-left">
+        <div class="mode-btn-name">Todas as escalas</div>
+        <div class="mode-btn-desc">MAIOR · MENOR NATURAL · MENOR HARMÔNICA · MENOR MELÓDICA</div>
+      </div>
+      <div class="mode-btn-count" id="count-all"></div>
+    </button>
+    <button class="mode-btn" data-mode="major" onclick="selectMode(this)">
+      <div class="mode-btn-left">
+        <div class="mode-btn-name">Escalas Maiores</div>
+        <div class="mode-btn-desc">AS 12 ESCALAS MAIORES</div>
+      </div>
+      <div class="mode-btn-count">12</div>
+    </button>
+    <button class="mode-btn" data-mode="minor" onclick="selectMode(this)">
+      <div class="mode-btn-left">
+        <div class="mode-btn-name">Escalas Menores</div>
+        <div class="mode-btn-desc">NATURAL · HARMÔNICA · MELÓDICA</div>
+      </div>
+      <div class="mode-btn-count">36</div>
+    </button>
+  </div>
+
+  <button id="start-btn" onclick="startQuiz()">COMEÇAR</button>
+
+  <div id="home-stats">
+    <div class="home-stat">
+      <div class="home-stat-value" id="stat-studied">0</div>
+      <div class="home-stat-label">ESTUDADAS</div>
+    </div>
+    <div class="home-stat">
+      <div class="home-stat-value" id="stat-best">—</div>
+      <div class="home-stat-label">MELHOR</div>
+    </div>
+    <div class="home-stat">
+      <div class="home-stat-value" id="stat-streak">0</div>
+      <div class="home-stat-label">SEQUÊNCIA</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ QUIZ ══════════════════════════════════════════ -->
+<div id="quiz" class="screen">
+  <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+
+  <div id="quiz-top">
+    <div id="quiz-counter">1 / 10</div>
+    <div id="quiz-score-display">
+      <div class="qs-item">
+        <div class="qs-val" id="qs-correct">0</div>
+        <div class="qs-label">CERTAS</div>
+      </div>
+      <div class="qs-item">
+        <div class="qs-val" id="qs-wrong">0</div>
+        <div class="qs-label">ERRADAS</div>
+      </div>
+    </div>
+    <button id="exit-btn" onclick="goHome()">SAIR</button>
+  </div>
+
+  <div id="card-wrap">
+    <div id="card">
+      <div id="card-mode-tag"></div>
+      <div id="card-root">C</div>
+      <div id="card-type">Maior</div>
+      <div id="card-question">SELECIONE AS NOTAS</div>
+      <div id="note-grid"></div>
+      <div id="feedback-row">
+        <div id="feedback-text"></div>
+      </div>
+      <button id="confirm-btn" onclick="confirmAnswer()" disabled>CONFIRMAR</button>
+    </div>
+  </div>
+
+  <button id="next-btn" onclick="nextCard()">PRÓXIMA →</button>
+</div>
+
+<!-- ══ RESULT ════════════════════════════════════════ -->
+<div id="result" class="screen">
+  <div id="result-heading">Res<em>ul</em>tado</div>
+  <div id="result-sub">sessão completa</div>
+
+  <div id="result-stats">
+    <div class="result-stat">
+      <div class="result-stat-value" id="r-correct">0</div>
+      <div class="result-stat-label">Certas</div>
+    </div>
+    <div class="result-stat">
+      <div class="result-stat-value" id="r-wrong">0</div>
+      <div class="result-stat-label">Erradas</div>
+    </div>
+    <div class="result-stat">
+      <div class="result-stat-value" id="r-pct">0%</div>
+      <div class="result-stat-label">Acerto</div>
+    </div>
+  </div>
+
+  <div id="result-message"></div>
+
+  <div id="result-actions">
+    <button class="result-btn primary" onclick="startQuiz()">JOGAR NOVAMENTE</button>
+    <button class="result-btn secondary" onclick="goHome()">MENU PRINCIPAL</button>
+  </div>
+</div>
+
+<!-- ══ INSTALL BANNER ════════════════════════════════ -->
+<div id="install-banner">
+  <button id="install-close" onclick="dismissBanner()">×</button>
+  <p>Instale como app: toque em <span>Compartilhar ↑</span> e depois <span>"Adicionar à Tela de Início"</span></p>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  DADOS — Escalas musicais
+// ══════════════════════════════════════════════════════
+
+const ALL_NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+// Todos os 12 cromatismos
+const ROOTS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+// Fórmulas de intervalos (em semitons a partir da tônica)
+const FORMULAS = {
+  'Maior':            [0,2,4,5,7,9,11],
+  'Menor Natural':    [0,2,3,5,7,8,10],
+  'Menor Harmônica':  [0,2,3,5,7,8,11],
+  'Menor Melódica':   [0,2,3,5,7,9,11],
+};
+
+// Gera todas as escalas
+function buildScale(root, type) {
+  const rootIdx = ALL_NOTES.indexOf(root);
+  return FORMULAS[type].map(interval => ALL_NOTES[(rootIdx + interval) % 12]);
+}
+
+function buildAllCards(mode) {
+  const types = mode === 'major' ? ['Maior']
+              : mode === 'minor' ? ['Menor Natural','Menor Harmônica','Menor Melódica']
+              : Object.keys(FORMULAS);
+  const cards = [];
+  for (const root of ROOTS) {
+    for (const type of types) {
+      cards.push({ root, type, notes: buildScale(root, type) });
+    }
+  }
+  return cards;
+}
+
+// Contagens
+document.getElementById('count-all').textContent = 48;
+
+// ══════════════════════════════════════════════════════
+//  PERSISTÊNCIA
+// ══════════════════════════════════════════════════════
+
+let stats = { studied: 0, bestPct: null, streak: 0 };
+
+function loadStats() {
+  try {
+    const s = localStorage.getItem('scales_stats');
+    if (s) stats = JSON.parse(s);
+  } catch(e) {}
+}
+
+function saveStats() {
+  try { localStorage.setItem('scales_stats', JSON.stringify(stats)); } catch(e) {}
+}
+
+function updateHomeStats() {
+  document.getElementById('stat-studied').textContent = stats.studied;
+  document.getElementById('stat-best').textContent    = stats.bestPct !== null ? stats.bestPct + '%' : '—';
+  document.getElementById('stat-streak').textContent  = stats.streak;
+}
+
+// ══════════════════════════════════════════════════════
+//  ESTADO DO QUIZ
+// ══════════════════════════════════════════════════════
+
+let deck        = [];
+let cardIndex   = 0;
+let sessionCorrect = 0;
+let sessionWrong   = 0;
+let selectedMode   = 'all';
+let selectedNotes  = new Set();
+let answered       = false;
+let currentStreak  = 0;
+
+const CARDS_PER_SESSION = 10;
+
+// ══════════════════════════════════════════════════════
+//  NAVEGAÇÃO
+// ══════════════════════════════════════════════════════
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome() {
+  showScreen('home');
+  updateHomeStats();
+}
+
+// ══════════════════════════════════════════════════════
+//  HOME
+// ══════════════════════════════════════════════════════
+
+function selectMode(btn) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedMode = btn.dataset.mode;
+}
+
+// ══════════════════════════════════════════════════════
+//  QUIZ
+// ══════════════════════════════════════════════════════
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  const all = buildAllCards(selectedMode);
+  deck = shuffle(all).slice(0, CARDS_PER_SESSION);
+  cardIndex      = 0;
+  sessionCorrect = 0;
+  sessionWrong   = 0;
+  currentStreak  = 0;
+
+  showScreen('quiz');
+  renderCard();
+}
+
+function renderCard() {
+  const card = deck[cardIndex];
+  answered = false;
+  selectedNotes.clear();
+
+  // Progress
+  const pct = (cardIndex / CARDS_PER_SESSION) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('quiz-counter').textContent = `${cardIndex + 1} / ${CARDS_PER_SESSION}`;
+  document.getElementById('qs-correct').textContent   = sessionCorrect;
+  document.getElementById('qs-wrong').textContent     = sessionWrong;
+
+  // Card content
+  const typeColors = {
+    'Maior':           '#c9a96e',
+    'Menor Natural':   '#8eaecf',
+    'Menor Harmônica': '#cf8eae',
+    'Menor Melódica':  '#8ecfae',
+  };
+
+  document.getElementById('card-mode-tag').textContent = card.type.toUpperCase();
+  document.getElementById('card-mode-tag').style.color = typeColors[card.type] || 'var(--gold)';
+  document.getElementById('card-root').textContent = card.root;
+  document.getElementById('card-type').textContent = card.type;
+  document.getElementById('card-type').style.color = typeColors[card.type] || 'var(--gold)';
+
+  // Feedback reset
+  const fb = document.getElementById('feedback-text');
+  fb.textContent = '';
+  fb.className = 'feedback-text';
+
+  // Confirm reset
+  const confirmBtn = document.getElementById('confirm-btn');
+  confirmBtn.textContent = 'CONFIRMAR';
+  confirmBtn.disabled = true;
+  confirmBtn.className = '';
+
+  // Next btn
+  document.getElementById('next-btn').classList.remove('visible');
+
+  // Note grid — shuffle display order
+  const grid = document.getElementById('note-grid');
+  grid.innerHTML = '';
+  const displayNotes = shuffle(ALL_NOTES);
+
+  for (const note of displayNotes) {
+    const btn = document.createElement('button');
+    btn.className = 'note-btn';
+    btn.textContent = note;
+    btn.dataset.note = note;
+    btn.onclick = () => toggleNote(btn, note);
+    grid.appendChild(btn);
+  }
+
+  // Animate card in
+  const cardEl = document.getElementById('card');
+  cardEl.classList.remove('slide-out-left', 'slide-out-right', 'slide-in');
+  void cardEl.offsetWidth;
+  cardEl.classList.add('slide-in');
+}
+
+function toggleNote(btn, note) {
+  if (answered) return;
+
+  if (selectedNotes.has(note)) {
+    selectedNotes.delete(note);
+    btn.classList.remove('selected');
+  } else {
+    selectedNotes.add(note);
+    btn.classList.add('selected');
+    btn.classList.add('pop');
+    btn.addEventListener('animationend', () => btn.classList.remove('pop'), { once: true });
+  }
+
+  document.getElementById('confirm-btn').disabled = selectedNotes.size === 0;
+}
+
+function confirmAnswer() {
+  if (answered || selectedNotes.size === 0) return;
+  answered = true;
+
+  const card    = deck[cardIndex];
+  const correct = new Set(card.notes);
+  const selected = selectedNotes;
+
+  // Check
+  const isCorrect = [...correct].every(n => selected.has(n)) &&
+                    [...selected].every(n => correct.has(n));
+
+  // Color all note buttons
+  document.querySelectorAll('.note-btn').forEach(btn => {
+    const note = btn.dataset.note;
+    const inCorrect  = correct.has(note);
+    const inSelected = selected.has(note);
+
+    if (inCorrect && inSelected) {
+      btn.className = 'note-btn correct';  // acertou
+    } else if (!inCorrect && inSelected) {
+      btn.className = 'note-btn wrong';    // errou (selecionou errado)
+    } else if (inCorrect && !inSelected) {
+      btn.className = 'note-btn missed';   // não selecionou mas era correto
+    } else {
+      btn.className = 'note-btn';
+      btn.style.opacity = '0.25';
+    }
+  });
+
+  // Feedback
+  const fb = document.getElementById('feedback-text');
+  if (isCorrect) {
+    fb.textContent = 'CORRETO';
+    fb.className = 'correct show';
+    sessionCorrect++;
+    currentStreak++;
+  } else {
+    fb.textContent = 'INCORRETO';
+    fb.className = 'wrong show';
+    sessionWrong++;
+    currentStreak = 0;
+  }
+
+  document.getElementById('feedback-text').classList.add('show');
+  document.getElementById('qs-correct').textContent = sessionCorrect;
+  document.getElementById('qs-wrong').textContent   = sessionWrong;
+
+  // Confirm → shows notes
+  const confirmBtn = document.getElementById('confirm-btn');
+  confirmBtn.textContent = 'VER NOTAS CORRETAS ↑';
+  confirmBtn.className = 'checking';
+  confirmBtn.disabled = true;
+
+  // Show next
+  setTimeout(() => {
+    document.getElementById('next-btn').classList.add('visible');
+  }, 400);
+}
+
+function nextCard() {
+  cardIndex++;
+
+  if (cardIndex >= CARDS_PER_SESSION) {
+    finishQuiz();
+    return;
+  }
+
+  // Animate out
+  const cardEl = document.getElementById('card');
+  cardEl.classList.add('slide-out-left');
+  setTimeout(renderCard, 280);
+}
+
+function finishQuiz() {
+  const total = sessionCorrect + sessionWrong;
+  const pct   = total > 0 ? Math.round((sessionCorrect / total) * 100) : 0;
+
+  // Update stats
+  stats.studied += total;
+  if (stats.bestPct === null || pct > stats.bestPct) stats.bestPct = pct;
+  if (currentStreak > stats.streak) stats.streak = currentStreak;
+  saveStats();
+
+  // Result screen
+  document.getElementById('r-correct').textContent = sessionCorrect;
+  document.getElementById('r-wrong').textContent   = sessionWrong;
+  document.getElementById('r-pct').textContent     = pct + '%';
+
+  const messages = [
+    [90, 'Excelente! Você domina as escalas.'],
+    [70, 'Muito bem! Continue praticando.'],
+    [50, 'Bom progresso. As escalas pedem mais atenção.'],
+    [0,  'Continue estudando. A prática leva à perfeição.'],
+  ];
+  const msg = messages.find(([threshold]) => pct >= threshold);
+  document.getElementById('result-message').textContent = msg[1];
+
+  document.getElementById('progress-bar').style.width = '100%';
+  showScreen('result');
+}
+
+// ══════════════════════════════════════════════════════
+//  INSTALL BANNER (iOS)
+// ══════════════════════════════════════════════════════
+
+function isIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+function isStandalone() { return window.navigator.standalone === true; }
+
+function dismissBanner() {
+  document.getElementById('install-banner').classList.remove('show');
+  try { localStorage.setItem('scales_banner_dismissed', '1'); } catch(e) {}
+}
+
+function maybeShowBanner() {
+  if (!isIOS() || isStandalone()) return;
+  try { if (localStorage.getItem('scales_banner_dismissed')) return; } catch(e) {}
+  setTimeout(() => document.getElementById('install-banner').classList.add('show'), 2500);
+}
+
+// ══════════════════════════════════════════════════════
+//  SERVICE WORKER
+// ══════════════════════════════════════════════════════
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+
+loadStats();
+updateHomeStats();
+maybeShowBanner();
+</script>
+</body>
+</html>
