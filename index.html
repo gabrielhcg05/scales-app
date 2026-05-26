@@ -15,7 +15,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@300;400&display=block" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
       --bg:      #09090e;
       --surface: #0f0f17;
@@ -30,335 +29,174 @@
       --serif:   'Cormorant Garamond', Georgia, serif;
       --mono:    'DM Mono', monospace;
     }
-
     html, body {
       height: 100%; background: var(--bg); color: var(--fg);
       font-family: var(--serif); overflow: hidden;
       -webkit-tap-highlight-color: transparent;
       -webkit-touch-callout: none; user-select: none;
     }
-
     body::after {
       content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 999;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
     }
 
-    /* ── SCREENS ── */
     .screen {
       position: fixed; inset: 0;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       opacity: 0; pointer-events: none;
       transition: opacity 0.32s ease; z-index: 10;
-      padding: 32px 28px max(32px, env(safe-area-inset-bottom));
+      padding: 28px 24px max(28px, env(safe-area-inset-bottom));
       overflow-y: auto; -webkit-overflow-scrolling: touch;
     }
     .screen.active { opacity: 1; pointer-events: all; }
 
-    /* ════════════════════════════════════════
-       HOME
-    ════════════════════════════════════════ */
+    /* ════ HOME ════ */
     #home { gap: 0; justify-content: center; }
 
-    .eyebrow {
-      font-family: var(--mono); font-size: 9px;
-      letter-spacing: 6px; color: var(--dim);
-      margin-bottom: 8px;
-      animation: up 0.5s ease 0.05s both;
-    }
-    .big-title {
-      font-size: clamp(52px, 16vw, 72px);
-      font-weight: 300; line-height: 0.92;
-      letter-spacing: -2px; margin-bottom: 4px;
-      animation: up 0.5s ease 0.1s both;
-    }
+    .eyebrow { font-family: var(--mono); font-size: 9px; letter-spacing: 6px; color: var(--dim); margin-bottom: 8px; animation: up 0.5s ease 0.05s both; }
+    .big-title { font-size: clamp(50px, 15vw, 68px); font-weight: 300; line-height: 0.92; letter-spacing: -2px; margin-bottom: 4px; animation: up 0.5s ease 0.1s both; }
     .big-title em { font-style: italic; color: var(--gold); }
-    .home-sub {
-      font-family: var(--mono); font-size: 9px;
-      letter-spacing: 3px; color: var(--dim);
-      margin-bottom: 44px;
-      animation: up 0.5s ease 0.12s both;
-    }
+    .home-sub { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--dim); margin-bottom: 36px; animation: up 0.5s ease 0.12s both; }
 
-    /* ── DROPDOWNS ── */
-    .selects-wrap {
-      width: 100%; max-width: 360px;
-      display: flex; flex-direction: column; gap: 10px;
-      margin-bottom: 12px;
-      animation: up 0.5s ease 0.17s both;
-    }
+    /* ── multi-select pill groups ── */
+    .filter-block { width: 100%; max-width: 380px; margin-bottom: 14px; animation: up 0.5s ease 0.16s both; }
+    .filter-block + .filter-block { animation-delay: 0.19s; }
+    .filter-block:last-of-type     { animation-delay: 0.22s; }
 
-    .select-row {
-      display: flex; align-items: stretch; gap: 8px;
-    }
+    .filter-label { font-family: var(--mono); font-size: 8px; letter-spacing: 4px; color: var(--dimmer); margin-bottom: 7px; }
 
-    .select-label {
-      font-family: var(--mono); font-size: 9px;
-      letter-spacing: 3px; color: var(--dimmer);
-      width: 56px; flex-shrink: 0;
-      display: flex; align-items: center;
-    }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
 
-    /* Native select styled */
-    .styled-select {
-      flex: 1; position: relative;
-    }
-
-    .styled-select select {
-      width: 100%; appearance: none; -webkit-appearance: none;
-      background: var(--surface);
+    .pill {
+      background: transparent;
       border: 1px solid var(--border);
-      border-radius: 3px;
-      padding: 13px 36px 13px 14px;
-      font-family: var(--mono); font-size: 12px;
-      color: var(--fg); cursor: pointer;
-      outline: none;
-      transition: border-color 0.15s;
-      /* iOS fix */
-      background-clip: padding-box;
-    }
-
-    .styled-select select:focus {
-      border-color: var(--gold);
-    }
-
-    /* custom arrow */
-    .styled-select::after {
-      content: '↓';
-      position: absolute; right: 12px; top: 50%;
-      transform: translateY(-50%);
-      font-family: var(--mono); font-size: 10px;
-      color: var(--dimmer); pointer-events: none;
-    }
-
-    /* option colors handled per-group via JS class on select */
-    .styled-select select option { background: #0f0f17; color: var(--fg); }
-
-    /* ── DIVIDER ── */
-    .divider {
-      width: 100%; max-width: 360px;
-      height: 1px; background: var(--border);
-      margin: 16px 0;
-      animation: up 0.5s ease 0.2s both;
-    }
-
-    /* ── SUMMARY ── */
-    #summary {
-      width: 100%; max-width: 360px;
-      font-family: var(--mono); font-size: 9px;
-      letter-spacing: 2px; color: var(--dimmer);
-      text-align: center; min-height: 14px;
-      margin-bottom: 20px;
-      animation: up 0.5s ease 0.22s both;
-    }
-
-    /* ── CTA ── */
-    .cta-row {
-      width: 100%; max-width: 360px;
-      display: flex; gap: 8px;
-      margin-bottom: 32px;
-      animation: up 0.5s ease 0.25s both;
-    }
-
-    #start-btn {
-      flex: 1; background: var(--gold); border: none;
-      border-radius: 3px; padding: 15px;
-      font-family: var(--mono); font-size: 9px;
-      letter-spacing: 5px; color: var(--bg);
-      cursor: pointer; transition: opacity 0.15s, transform 0.1s;
-      -webkit-appearance: none; outline: none;
-    }
-    #start-btn:active { opacity: 0.8; transform: scale(0.985); }
-
-    #preview-btn {
-      background: transparent; border: 1px solid var(--border);
-      border-radius: 3px; padding: 15px 16px;
-      font-family: var(--mono); font-size: 9px;
-      letter-spacing: 2px; color: var(--dim);
-      cursor: pointer; transition: all 0.15s;
+      border-radius: 20px;
+      padding: 7px 13px;
+      font-family: var(--mono); font-size: 11px;
+      color: rgba(237,232,223,0.45);
+      cursor: pointer; transition: all 0.14s;
       -webkit-appearance: none; outline: none;
       white-space: nowrap;
     }
+    .pill:active { transform: scale(0.93); }
+    .pill.sel {
+      border-color: var(--gold);
+      background: var(--gold-bg);
+      color: var(--fg);
+    }
+    .pill.sel-color { /* set via JS */ }
+
+    /* qty row */
+    .qty-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+    .qty-label { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--dimmer); }
+    .qty-btn {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 3px; padding: 7px 14px;
+      font-family: var(--mono); font-size: 11px;
+      color: rgba(237,232,223,0.45); cursor: pointer;
+      transition: all 0.14s; -webkit-appearance: none; outline: none;
+    }
+    .qty-btn.sel { border-color: var(--gold); background: var(--gold-bg); color: var(--fg); }
+    .qty-btn:active { transform: scale(0.93); }
+
+    #summary {
+      width: 100%; max-width: 380px;
+      font-family: var(--mono); font-size: 9px; letter-spacing: 2px;
+      color: var(--dimmer); text-align: center; min-height: 14px;
+      margin: 10px 0 18px;
+      animation: up 0.5s ease 0.25s both;
+    }
+
+    .cta-row { width: 100%; max-width: 380px; display: flex; gap: 8px; margin-bottom: 28px; animation: up 0.5s ease 0.27s both; }
+    #start-btn { flex: 1; background: var(--gold); border: none; border-radius: 3px; padding: 15px; font-family: var(--mono); font-size: 9px; letter-spacing: 5px; color: var(--bg); cursor: pointer; transition: opacity 0.15s, transform 0.1s; -webkit-appearance: none; outline: none; }
+    #start-btn:active { opacity: 0.8; transform: scale(0.985); }
+    #preview-btn { background: transparent; border: 1px solid var(--border); border-radius: 3px; padding: 15px 14px; font-family: var(--mono); font-size: 9px; letter-spacing: 2px; color: var(--dim); cursor: pointer; transition: all 0.15s; -webkit-appearance: none; outline: none; white-space: nowrap; }
     #preview-btn:active { border-color: var(--gold); color: var(--gold); }
 
-    /* ── HOME STATS ── */
-    .home-stats {
-      display: flex; gap: 36px;
-      animation: up 0.5s ease 0.28s both;
-    }
+    .home-stats { display: flex; gap: 36px; animation: up 0.5s ease 0.3s both; }
     .hstat { display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .hstat-v { font-family: var(--mono); font-size: 20px; color: var(--fg); font-weight: 300; }
     .hstat-l { font-family: var(--mono); font-size: 8px; letter-spacing: 2px; color: var(--dimmer); }
 
-    /* ════════════════════════════════════════
-       PREVIEW MODAL
-    ════════════════════════════════════════ */
+    /* ════ PREVIEW ════ */
     #preview-modal {
       display: none; position: fixed; inset: 0;
       background: rgba(9,9,14,0.88); z-index: 200;
-      align-items: center; justify-content: center;
-      padding: 24px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      align-items: center; justify-content: center; padding: 24px;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     }
     #preview-modal.show { display: flex; animation: up 0.22s ease both; }
-
-    .pv-box {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 4px; padding: 28px 22px 24px;
-      width: 100%; max-width: 360px;
-    }
-    .pv-top {
-      display: flex; justify-content: space-between;
-      align-items: flex-start; margin-bottom: 16px;
-    }
-    .pv-root { font-size: 54px; font-weight: 300; line-height: 1; }
-    .pv-type { font-size: 18px; font-style: italic; color: var(--gold); margin-top: 2px; }
-    #pv-close {
-      background: none; border: none; color: var(--dimmer);
-      font-size: 22px; cursor: pointer; line-height: 1; padding: 0;
-    }
-    .pv-notes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-    .pv-note {
-      font-family: var(--mono); font-size: 13px;
-      border: 1px solid var(--border); border-radius: 3px;
-      padding: 7px 11px; color: var(--fg);
-    }
+    .pv-box { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 26px 22px 22px; width: 100%; max-width: 360px; }
+    .pv-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .pv-root { font-size: 52px; font-weight: 300; line-height: 1; }
+    .pv-type { font-size: 17px; font-style: italic; color: var(--gold); margin-top: 2px; }
+    #pv-close { background: none; border: none; color: var(--dimmer); font-size: 22px; cursor: pointer; padding: 0; }
+    .pv-notes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .pv-note { font-family: var(--mono); font-size: 13px; border: 1px solid var(--border); border-radius: 3px; padding: 7px 11px; color: var(--fg); }
     .pv-note.root { border-color: var(--gold); color: var(--gold); }
-    .pv-intervals {
-      font-family: var(--mono); font-size: 9px;
-      letter-spacing: 2px; color: var(--dimmer);
-      margin-bottom: 10px;
-    }
-    .pv-desc {
-      font-size: 14px; font-style: italic;
-      color: var(--dim); line-height: 1.55;
-    }
+    .pv-intervals { font-family: var(--mono); font-size: 9px; letter-spacing: 2px; color: var(--dimmer); margin-bottom: 10px; }
+    .pv-desc { font-size: 14px; font-style: italic; color: var(--dim); line-height: 1.55; }
 
-    /* ════════════════════════════════════════
-       QUIZ
-    ════════════════════════════════════════ */
+    /* ════ QUIZ ════ */
     #quiz { justify-content: flex-start; padding-top: 16px; }
-
-    #prog-wrap {
-      position: fixed; top: 0; left: 0; right: 0;
-      height: 2px; background: var(--border); z-index: 50;
-    }
+    #prog-wrap { position: fixed; top: 0; left: 0; right: 0; height: 2px; background: var(--border); z-index: 50; }
     #prog-bar { height: 100%; background: var(--gold); transition: width 0.4s ease; }
-
-    #quiz-bar {
-      width: 100%; display: flex; align-items: center;
-      justify-content: space-between; padding: 8px 0 14px; flex-shrink: 0;
-    }
+    #quiz-bar { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 8px 0 14px; flex-shrink: 0; }
     #q-counter { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 2px; }
-    .q-scores  { display: flex; gap: 14px; }
-    .qscore    { display: flex; flex-direction: column; align-items: center; gap: 1px; }
-    .qscore-v  { font-family: var(--mono); font-size: 15px; color: var(--fg); }
-    .qscore-l  { font-family: var(--mono); font-size: 7px; letter-spacing: 2px; color: var(--dimmer); }
-    #exit-btn  { background: none; border: none; font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--dimmer); cursor: pointer; }
-
-    #card-area {
-      width: 100%; flex: 1;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 12px;
-    }
-
-    #card {
-      width: 100%; max-width: 380px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 4px; padding: 22px 20px 18px;
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-    }
+    .q-scores { display: flex; gap: 14px; }
+    .qscore { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+    .qscore-v { font-family: var(--mono); font-size: 15px; color: var(--fg); }
+    .qscore-l { font-family: var(--mono); font-size: 7px; letter-spacing: 2px; color: var(--dimmer); }
+    #exit-btn { background: none; border: none; font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--dimmer); cursor: pointer; }
+    #card-area { width: 100%; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+    #card { width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 22px 20px 18px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
     #card.out { animation: outL 0.24s ease forwards; }
     #card.in  { animation: inR  0.24s ease forwards; }
-
     @keyframes outL { to { transform: translateX(-44px); opacity: 0; } }
     @keyframes inR  { from { transform: translateX(32px); opacity: 0; } to { transform: none; opacity: 1; } }
-
     #card-tag  { font-family: var(--mono); font-size: 8px; letter-spacing: 4px; color: var(--gold); margin-bottom: 4px; opacity: 0.75; }
-    #card-root { font-size: clamp(46px, 14vw, 64px); font-weight: 300; line-height: 1; }
-    #card-type { font-size: clamp(15px, 4.5vw, 19px); font-weight: 300; font-style: italic; color: var(--gold); margin-bottom: 8px; }
+    #card-root { font-size: clamp(46px, 14vw, 62px); font-weight: 300; line-height: 1; }
+    #card-type { font-size: clamp(14px, 4vw, 18px); font-weight: 300; font-style: italic; color: var(--gold); margin-bottom: 8px; }
     #card-prompt { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--dim); margin-bottom: 4px; }
-
-    #note-grid {
-      width: 100%; display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 5px; margin-bottom: 3px;
-    }
-
-    .nbtn {
-      aspect-ratio: 1; background: transparent;
-      border: 1px solid var(--border); border-radius: 3px;
-      font-family: var(--mono); font-size: 11px;
-      color: rgba(237,232,223,0.35); cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.11s; -webkit-appearance: none; outline: none;
-    }
+    #note-grid { width: 100%; display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 3px; }
+    .nbtn { aspect-ratio: 1; background: transparent; border: 1px solid var(--border); border-radius: 3px; font-family: var(--mono); font-size: 11px; color: rgba(237,232,223,0.35); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.11s; -webkit-appearance: none; outline: none; }
     .nbtn:active { transform: scale(0.87); }
     .nbtn.sel  { border-color: rgba(237,232,223,0.4); background: rgba(237,232,223,0.06); color: var(--fg); }
     .nbtn.hit  { border-color: var(--green); background: rgba(111,181,138,0.13); color: var(--green); }
     .nbtn.miss { border-color: rgba(111,181,138,0.28); color: rgba(111,181,138,0.45); }
     .nbtn.err  { border-color: var(--red);   background: rgba(181,111,111,0.13); color: var(--red); }
     .nbtn.dim  { opacity: 0.14; }
-
     #fb-row { min-height: 20px; display: flex; align-items: center; justify-content: center; }
     #fb-text { font-family: var(--mono); font-size: 9px; letter-spacing: 4px; opacity: 0; transition: opacity 0.22s; }
     #fb-text.show { opacity: 1; }
     #fb-text.ok  { color: var(--green); }
     #fb-text.bad { color: var(--red); }
-
-    #confirm-btn {
-      width: 100%; background: transparent;
-      border: 1px solid var(--border); border-radius: 3px;
-      padding: 12px; font-family: var(--mono); font-size: 9px;
-      letter-spacing: 4px; color: var(--dim); cursor: pointer;
-      transition: all 0.14s; -webkit-appearance: none; outline: none;
-    }
+    #confirm-btn { width: 100%; background: transparent; border: 1px solid var(--border); border-radius: 3px; padding: 12px; font-family: var(--mono); font-size: 9px; letter-spacing: 4px; color: var(--dim); cursor: pointer; transition: all 0.14s; -webkit-appearance: none; outline: none; }
     #confirm-btn:not(:disabled):active { border-color: var(--gold); color: var(--gold); }
     #confirm-btn:disabled { opacity: 0.24; cursor: default; }
     #confirm-btn.revealed { border-color: var(--gold); color: var(--gold); cursor: default; }
-
-    #next-btn {
-      width: 100%; max-width: 380px; background: transparent;
-      border: 1px solid var(--border); border-radius: 3px; padding: 13px;
-      font-family: var(--mono); font-size: 9px; letter-spacing: 4px; color: var(--dim);
-      cursor: pointer; opacity: 0; pointer-events: none;
-      transition: opacity 0.27s, border-color 0.14s, color 0.14s;
-      -webkit-appearance: none; outline: none;
-    }
+    #next-btn { width: 100%; max-width: 380px; background: transparent; border: 1px solid var(--border); border-radius: 3px; padding: 13px; font-family: var(--mono); font-size: 9px; letter-spacing: 4px; color: var(--dim); cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.27s, border-color 0.14s, color 0.14s; -webkit-appearance: none; outline: none; }
     #next-btn.show { opacity: 1; pointer-events: all; }
     #next-btn:active { border-color: var(--gold); color: var(--gold); }
 
-    /* ════════════════════════════════════════
-       RESULT
-    ════════════════════════════════════════ */
+    /* ════ RESULT ════ */
     #result { justify-content: center; }
-
     .res-title { font-size: clamp(44px, 13vw, 58px); font-weight: 300; line-height: 0.95; margin-bottom: 4px; animation: up 0.5s ease 0.05s both; }
     .res-title em { font-style: italic; color: var(--gold); }
     .res-sub { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--dim); margin-bottom: 34px; animation: up 0.5s ease 0.1s both; }
-
-    .res-grid {
-      width: 100%; max-width: 340px;
-      display: grid; grid-template-columns: repeat(3,1fr);
-      border: 1px solid var(--border); border-radius: 3px;
-      overflow: hidden; margin-bottom: 34px;
-      animation: up 0.5s ease 0.15s both;
-    }
+    .res-grid { width: 100%; max-width: 340px; display: grid; grid-template-columns: repeat(3,1fr); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 34px; animation: up 0.5s ease 0.15s both; }
     .res-cell { display: flex; flex-direction: column; align-items: center; padding: 16px 8px; gap: 5px; border-right: 1px solid var(--border); }
     .res-cell:last-child { border-right: none; }
     .res-cell-v { font-family: var(--mono); font-size: 24px; color: var(--fg); font-weight: 300; }
     .res-cell-l { font-family: var(--mono); font-size: 8px; letter-spacing: 2px; color: var(--dimmer); text-align: center; }
-
     .res-msg { font-size: 16px; font-style: italic; color: var(--dim); text-align: center; max-width: 260px; line-height: 1.55; margin-bottom: 30px; animation: up 0.5s ease 0.2s both; }
-
     .res-actions { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 8px; animation: up 0.5s ease 0.25s both; }
     .res-btn { width: 100%; border-radius: 3px; padding: 14px; font-family: var(--mono); font-size: 9px; letter-spacing: 4px; cursor: pointer; transition: opacity 0.15s, transform 0.1s; -webkit-appearance: none; outline: none; }
     .res-btn.pri { background: var(--gold); border: none; color: var(--bg); }
     .res-btn.sec { background: transparent; border: 1px solid var(--border); color: var(--dim); }
     .res-btn:active { opacity: 0.8; transform: scale(0.985); }
 
-    /* banner */
     #banner { display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(15,15,23,0.96); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; width: calc(100% - 48px); max-width: 340px; z-index: 400; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
     #banner.show { display: block; animation: up 0.35s ease both; }
     #banner p { font-family: var(--mono); font-size: 10px; color: var(--dim); line-height: 1.65; }
@@ -378,73 +216,22 @@
   <h1 class="big-title">Esca<em>las</em></h1>
   <p class="home-sub">MAIOR · MENOR · MODOS GREGOS · PENTATÔNICAS</p>
 
-  <div class="selects-wrap">
+  <!-- TÔNICA -->
+  <div class="filter-block">
+    <div class="filter-label">TÔNICA</div>
+    <div class="pill-row" id="pills-tonic"></div>
+  </div>
 
-    <!-- Tônica -->
-    <div class="select-row">
-      <span class="select-label">TÔNICA</span>
-      <div class="styled-select">
-        <select id="sel-tonic">
-          <option value="ALL">Todas as tônicas</option>
-          <option value="C">Dó  (C)</option>
-          <option value="C#">Dó# (C#)</option>
-          <option value="D">Ré  (D)</option>
-          <option value="D#">Ré# (D#)</option>
-          <option value="E">Mi  (E)</option>
-          <option value="F">Fá  (F)</option>
-          <option value="F#">Fá# (F#)</option>
-          <option value="G">Sol (G)</option>
-          <option value="G#">Sol#(G#)</option>
-          <option value="A">Lá  (A)</option>
-          <option value="A#">Lá# (A#)</option>
-          <option value="B">Si  (B)</option>
-        </select>
-      </div>
-    </div>
+  <!-- TIPO -->
+  <div class="filter-block">
+    <div class="filter-label">TIPO DE ESCALA</div>
+    <div class="pill-row" id="pills-type"></div>
+  </div>
 
-    <!-- Tipo de escala -->
-    <div class="select-row">
-      <span class="select-label">TIPO</span>
-      <div class="styled-select">
-        <select id="sel-type" onchange="onTypeChange()">
-          <option value="ALL">Todos os tipos</option>
-          <optgroup label="── DIATÔNICAS ──">
-            <option value="Maior">Maior</option>
-            <option value="Menor Natural">Menor Natural</option>
-            <option value="Menor Harmônica">Menor Harmônica</option>
-            <option value="Menor Melódica">Menor Melódica</option>
-          </optgroup>
-          <optgroup label="── MODOS GREGOS ──">
-            <option value="Jônio">Jônio  (I)</option>
-            <option value="Dórico">Dórico  (II)</option>
-            <option value="Frígio">Frígio  (III)</option>
-            <option value="Lídio">Lídio  (IV)</option>
-            <option value="Mixolídio">Mixolídio  (V)</option>
-            <option value="Eólio">Eólio  (VI)</option>
-            <option value="Lócrio">Lócrio  (VII)</option>
-          </optgroup>
-          <optgroup label="── PENTATÔNICAS ──">
-            <option value="Pentatônica Maior">Pentatônica Maior</option>
-            <option value="Pentatônica Menor">Pentatônica Menor</option>
-            <option value="Blues">Blues</option>
-          </optgroup>
-        </select>
-      </div>
-    </div>
-
-    <!-- Qtd de cards -->
-    <div class="select-row">
-      <span class="select-label">CARDS</span>
-      <div class="styled-select">
-        <select id="sel-qty">
-          <option value="5">5 cards</option>
-          <option value="10" selected>10 cards</option>
-          <option value="20">20 cards</option>
-          <option value="ALL">Todos</option>
-        </select>
-      </div>
-    </div>
-
+  <!-- QTD -->
+  <div class="filter-block" style="animation-delay:0.22s">
+    <div class="filter-label">CARDS POR SESSÃO</div>
+    <div class="qty-row" id="pills-qty"></div>
   </div>
 
   <div id="summary"></div>
@@ -461,14 +248,11 @@
   </div>
 </div>
 
-<!-- ══ PREVIEW MODAL ════════════════════════════════ -->
+<!-- ══ PREVIEW ════════════════════════════════════════ -->
 <div id="preview-modal">
   <div class="pv-box">
     <div class="pv-top">
-      <div>
-        <div class="pv-root" id="pv-root">C</div>
-        <div class="pv-type" id="pv-type">Maior</div>
-      </div>
+      <div><div class="pv-root" id="pv-root">C</div><div class="pv-type" id="pv-type">Maior</div></div>
       <button id="pv-close" onclick="closePreview()">×</button>
     </div>
     <div class="pv-notes" id="pv-notes"></div>
@@ -518,140 +302,529 @@
   </div>
 </div>
 
-<!-- ══ BANNER ════════════════════════════════════════ -->
 <div id="banner">
   <button id="banner-close" onclick="closeBanner()">×</button>
   <p>Instale: toque em <span>Compartilhar ↑</span> depois em <span>"Adicionar à Tela de Início"</span></p>
 </div>
 
 <script>
-// ══════════════════════════════════════════════════════
-//  TEORIA
-// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+//  TEORIA — notas com grafia enarmônica correta por escala
+// ══════════════════════════════════════════════════════════════
 
-const CHROMATIC = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-
+// Cada escala tem suas notas escritas de forma teoricamente correta
+// (bemóis ou sustenidos conforme a tradição tonal)
 const SCALE_DATA = {
-  // Diatônicas
-  'Maior':              { intervals:[0,2,4,5,7,9,11], color:'#b8955a', desc:'A escala mais comum na música ocidental. Tom, tom, semitom, tom, tom, tom, semitom.' },
-  'Menor Natural':      { intervals:[0,2,3,5,7,8,10], color:'#6f8eb5', desc:'Relativa menor da escala maior. Base do sistema tonal menor.' },
-  'Menor Harmônica':    { intervals:[0,2,3,5,7,8,11], color:'#8e6fb5', desc:'Menor natural com 7ª elevada. Cria o intervalo característico de 2ª aumentada.' },
-  'Menor Melódica':     { intervals:[0,2,3,5,7,9,11], color:'#6fb5a0', desc:'Menor natural com 6ª e 7ª elevadas. Muito usada no jazz moderno.' },
-  // Modos Gregos
-  'Jônio':              { intervals:[0,2,4,5,7,9,11], color:'#b8955a', desc:'I modo. Idêntico à escala maior. Sonoridade brilhante e estável.' },
-  'Dórico':             { intervals:[0,2,3,5,7,9,10], color:'#6f9eb5', desc:'II modo. Menor com 6ª elevada. Sons do jazz e do blues. Ex: So What – Miles Davis.' },
-  'Frígio':             { intervals:[0,1,3,5,7,8,10], color:'#b5826f', desc:'III modo. 2ª abaixada. Sonoridade espanhola/flamenca, tensa e misteriosa.' },
-  'Lídio':              { intervals:[0,2,4,6,7,9,11], color:'#b5b06f', desc:'IV modo. Maior com 4ª aumentada (#4). Sonoridade etérea e onírica.' },
-  'Mixolídio':          { intervals:[0,2,4,5,7,9,10], color:'#9bb56f', desc:'V modo. Maior com 7ª menor. Muito usado no rock, blues e música celta.' },
-  'Eólio':              { intervals:[0,2,3,5,7,8,10], color:'#6f8eb5', desc:'VI modo. Idêntico à menor natural. Sombrio e introspectivo.' },
-  'Lócrio':             { intervals:[0,1,3,5,6,8,10], color:'#b56f6f', desc:'VII modo. 2ª e 5ª abaixadas. Sonoridade instável, raramente usado como tônica.' },
-  // Pentatônicas
-  'Pentatônica Maior':  { intervals:[0,2,4,7,9],      color:'#6fb58a', desc:'5 notas. Maior sem 4ª e 7ª. Universal: folk, pop, country, música asiática.' },
-  'Pentatônica Menor':  { intervals:[0,3,5,7,10],     color:'#6f8ab5', desc:'5 notas. Menor sem 2ª e 6ª. Pilar do blues, rock e soul.' },
-  'Blues':              { intervals:[0,3,5,6,7,10],   color:'#7e6fb5', desc:'Pentatônica menor + 5ª diminuta (blue note). A essência do blues e do jazz.' },
+  // ── Diatônicas ──
+  'Maior': {
+    color:'#b8955a',
+    desc:'A escala mais comum na música ocidental. T T st T T T st.',
+    notes:{
+      'C' :['C','D','E','F','G','A','B'],
+      'G' :['G','A','B','C','D','E','F#'],
+      'D' :['D','E','F#','G','A','B','C#'],
+      'A' :['A','B','C#','D','E','F#','G#'],
+      'E' :['E','F#','G#','A','B','C#','D#'],
+      'B' :['B','C#','D#','E','F#','G#','A#'],
+      'F#':['F#','G#','A#','B','C#','D#','E#'],
+      'C#':['C#','D#','E#','F#','G#','A#','B#'],
+      'F' :['F','G','A','Bb','C','D','E'],
+      'Bb':['Bb','C','D','Eb','F','G','A'],
+      'Eb':['Eb','F','G','Ab','Bb','C','D'],
+      'Ab':['Ab','Bb','C','Db','Eb','F','G'],
+      'Db':['Db','Eb','F','Gb','Ab','Bb','C'],
+      'Gb':['Gb','Ab','Bb','Cb','Db','Eb','F'],
+      'Cb':['Cb','Db','Eb','Fb','Gb','Ab','Bb'],
+    }
+  },
+  'Menor Natural': {
+    color:'#6f8eb5',
+    desc:'Relativa menor da escala maior. T st T T st T T.',
+    notes:{
+      'A' :['A','B','C','D','E','F','G'],
+      'E' :['E','F#','G','A','B','C','D'],
+      'B' :['B','C#','D','E','F#','G','A'],
+      'F#':['F#','G#','A','B','C#','D','E'],
+      'C#':['C#','D#','E','F#','G#','A','B'],
+      'G#':['G#','A#','B','C#','D#','E','F#'],
+      'D#':['D#','E#','F#','G#','A#','B','C#'],
+      'A#':['A#','B#','C#','D#','E#','F#','G#'],
+      'D' :['D','E','F','G','A','Bb','C'],
+      'G' :['G','A','Bb','C','D','Eb','F'],
+      'C' :['C','D','Eb','F','G','Ab','Bb'],
+      'F' :['F','G','Ab','Bb','C','Db','Eb'],
+      'Bb':['Bb','C','Db','Eb','F','Gb','Ab'],
+      'Eb':['Eb','F','Gb','Ab','Bb','Cb','Db'],
+      'Ab':['Ab','Bb','Cb','Db','Eb','Fb','Gb'],
+    }
+  },
+  'Menor Harmônica': {
+    color:'#8e6fb5',
+    desc:'Menor natural com 7ª elevada. Cria a 2ª aumentada característica.',
+    notes:{
+      'A' :['A','B','C','D','E','F','G#'],
+      'E' :['E','F#','G','A','B','C','D#'],
+      'B' :['B','C#','D','E','F#','G','A#'],
+      'F#':['F#','G#','A','B','C#','D','E#'],
+      'C#':['C#','D#','E','F#','G#','A','B#'],
+      'G#':['G#','A#','B','C#','D#','E','F##'],
+      'D' :['D','E','F','G','A','Bb','C#'],
+      'G' :['G','A','Bb','C','D','Eb','F#'],
+      'C' :['C','D','Eb','F','G','Ab','B'],
+      'F' :['F','G','Ab','Bb','C','Db','E'],
+      'Bb':['Bb','C','Db','Eb','F','Gb','A'],
+      'Eb':['Eb','F','Gb','Ab','Bb','Cb','D'],
+      'D#':['D#','E#','F#','G#','A#','B','C##'],
+      'G#':['G#','A#','B','C#','D#','E','F##'],
+      'Ab':['Ab','Bb','Cb','Db','Eb','Fb','G'],
+    }
+  },
+  'Menor Melódica': {
+    color:'#6fb5a0',
+    desc:'Menor com 6ª e 7ª elevadas ao subir. Muito usada no jazz moderno.',
+    notes:{
+      'A' :['A','B','C','D','E','F#','G#'],
+      'E' :['E','F#','G','A','B','C#','D#'],
+      'B' :['B','C#','D','E','F#','G#','A#'],
+      'F#':['F#','G#','A','B','C#','D#','E#'],
+      'C#':['C#','D#','E','F#','G#','A#','B#'],
+      'D' :['D','E','F','G','A','B','C#'],
+      'G' :['G','A','Bb','C','D','E','F#'],
+      'C' :['C','D','Eb','F','G','A','B'],
+      'F' :['F','G','Ab','Bb','C','D','E'],
+      'Bb':['Bb','C','Db','Eb','F','G','A'],
+      'Eb':['Eb','F','Gb','Ab','Bb','C','D'],
+      'Ab':['Ab','Bb','Cb','Db','Eb','F','G'],
+      'D#':['D#','E#','F#','G#','A#','B#','C##'],
+      'G#':['G#','A#','B','C#','D#','E#','F##'],
+    }
+  },
+  // ── Modos Gregos ──
+  'Jônio': {
+    color:'#b8a05a',
+    desc:'I modo. Idêntico à escala maior. Brilhante e estável.',
+    notes:null // gerado automaticamente igual à Maior
+  },
+  'Dórico': {
+    color:'#6f9eb5',
+    desc:'II modo. Menor com 6ª elevada. Sons do jazz e do blues. Ex: So What – Miles Davis.',
+    notes:{
+      'D' :['D','E','F','G','A','B','C'],
+      'A' :['A','B','C','D','E','F#','G'],
+      'E' :['E','F#','G','A','B','C#','D'],
+      'B' :['B','C#','D','E','F#','G#','A'],
+      'F#':['F#','G#','A','B','C#','D#','E'],
+      'C#':['C#','D#','E','F#','G#','A#','B'],
+      'G#':['G#','A#','B','C#','D#','E#','F#'],
+      'G' :['G','A','Bb','C','D','E','F'],
+      'C' :['C','D','Eb','F','G','A','Bb'],
+      'F' :['F','G','Ab','Bb','C','D','Eb'],
+      'Bb':['Bb','C','Db','Eb','F','G','Ab'],
+      'Eb':['Eb','F','Gb','Ab','Bb','C','Db'],
+      'Ab':['Ab','Bb','Cb','Db','Eb','F','Gb'],
+      'Db':['Db','Eb','Fb','Gb','Ab','Bb','Cb'],
+      'Gb':['Gb','Ab','Bbb','Cb','Db','Eb','Fb'],
+    }
+  },
+  'Frígio': {
+    color:'#b5826f',
+    desc:'III modo. 2ª abaixada. Sonoridade espanhola e misteriosa.',
+    notes:{
+      'E' :['E','F','G','A','B','C','D'],
+      'B' :['B','C','D','E','F#','G','A'],
+      'F#':['F#','G','A','B','C#','D','E'],
+      'C#':['C#','D','E','F#','G#','A','B'],
+      'G#':['G#','A','B','C#','D#','E','F#'],
+      'D#':['D#','E','F#','G#','A#','B','C#'],
+      'A#':['A#','B','C#','D#','E#','F#','G#'],
+      'A' :['A','Bb','C','D','E','F','G'],
+      'D' :['D','Eb','F','G','A','Bb','C'],
+      'G' :['G','Ab','Bb','C','D','Eb','F'],
+      'C' :['C','Db','Eb','F','G','Ab','Bb'],
+      'F' :['F','Gb','Ab','Bb','C','Db','Eb'],
+      'Bb':['Bb','Cb','Db','Eb','F','Gb','Ab'],
+      'Eb':['Eb','Fb','Gb','Ab','Bb','Cb','Db'],
+      'Ab':['Ab','Bbb','Cb','Db','Eb','Fb','Gb'],
+    }
+  },
+  'Lídio': {
+    color:'#b5b06f',
+    desc:'IV modo. Maior com 4ª aumentada (#4). Sonoridade etérea e onírica.',
+    notes:{
+      'F' :['F','G','A','B','C','D','E'],
+      'C' :['C','D','E','F#','G','A','B'],
+      'G' :['G','A','B','C#','D','E','F#'],
+      'D' :['D','E','F#','G#','A','B','C#'],
+      'A' :['A','B','C#','D#','E','F#','G#'],
+      'E' :['E','F#','G#','A#','B','C#','D#'],
+      'B' :['B','C#','D#','E#','F#','G#','A#'],
+      'Bb':['Bb','C','D','E','F','G','A'],
+      'Eb':['Eb','F','G','A','Bb','C','D'],
+      'Ab':['Ab','Bb','C','D','Eb','F','G'],
+      'Db':['Db','Eb','F','G','Ab','Bb','C'],
+      'Gb':['Gb','Ab','Bb','C','Db','Eb','F'],
+      'Cb':['Cb','Db','Eb','F','Gb','Ab','Bb'],
+      'F#':['F#','G#','A#','B#','C#','D#','E#'],
+      'C#':['C#','D#','E#','F##','G#','A#','B#'],
+    }
+  },
+  'Mixolídio': {
+    color:'#9bb56f',
+    desc:'V modo. Maior com 7ª menor. Muito usado no rock, blues e música celta.',
+    notes:{
+      'G' :['G','A','B','C','D','E','F'],
+      'D' :['D','E','F#','G','A','B','C'],
+      'A' :['A','B','C#','D','E','F#','G'],
+      'E' :['E','F#','G#','A','B','C#','D'],
+      'B' :['B','C#','D#','E','F#','G#','A'],
+      'F#':['F#','G#','A#','B','C#','D#','E'],
+      'C#':['C#','D#','E#','F#','G#','A#','B'],
+      'C' :['C','D','E','F','G','A','Bb'],
+      'F' :['F','G','A','Bb','C','D','Eb'],
+      'Bb':['Bb','C','D','Eb','F','G','Ab'],
+      'Eb':['Eb','F','G','Ab','Bb','C','Db'],
+      'Ab':['Ab','Bb','C','Db','Eb','F','Gb'],
+      'Db':['Db','Eb','F','Gb','Ab','Bb','Cb'],
+      'Gb':['Gb','Ab','Bb','Cb','Db','Eb','Fb'],
+      'Cb':['Cb','Db','Eb','Fb','Gb','Ab','Bbb'],
+    }
+  },
+  'Eólio': {
+    color:'#7e8eb5',
+    desc:'VI modo. Idêntico à menor natural. Sombrio e introspectivo.',
+    notes:null // gerado = Menor Natural
+  },
+  'Lócrio': {
+    color:'#b56f6f',
+    desc:'VII modo. 2ª e 5ª abaixadas. Sonoridade instável, raramente usado como tônica.',
+    notes:{
+      'B' :['B','C','D','E','F','G','A'],
+      'F#':['F#','G','A','B','C','D','E'],
+      'C#':['C#','D','E','F#','G','A','B'],
+      'G#':['G#','A','B','C#','D','E','F#'],
+      'D#':['D#','E','F#','G#','A','B','C#'],
+      'A#':['A#','B','C#','D#','E','F#','G#'],
+      'E#':['E#','F#','G#','A#','B','C#','D#'],
+      'E' :['E','F','G','A','Bb','C','D'],
+      'A' :['A','Bb','C','D','Eb','F','G'],
+      'D' :['D','Eb','F','G','Ab','Bb','C'],
+      'G' :['G','Ab','Bb','C','Db','Eb','F'],
+      'C' :['C','Db','Eb','F','Gb','Ab','Bb'],
+      'F' :['F','Gb','Ab','Bb','Cb','Db','Eb'],
+      'Bb':['Bb','Cb','Db','Eb','Fb','Gb','Ab'],
+      'Eb':['Eb','Fb','Gb','Ab','Bbb','Cb','Db'],
+    }
+  },
+  // ── Pentatônicas ──
+  'Pentatônica Maior': {
+    color:'#6fb58a',
+    desc:'5 notas. Maior sem 4ª e 7ª. Universal: folk, pop, country, música asiática.',
+    notes:{
+      'C' :['C','D','E','G','A'],
+      'G' :['G','A','B','D','E'],
+      'D' :['D','E','F#','A','B'],
+      'A' :['A','B','C#','E','F#'],
+      'E' :['E','F#','G#','B','C#'],
+      'B' :['B','C#','D#','F#','G#'],
+      'F#':['F#','G#','A#','C#','D#'],
+      'C#':['C#','D#','E#','G#','A#'],
+      'F' :['F','G','A','C','D'],
+      'Bb':['Bb','C','D','F','G'],
+      'Eb':['Eb','F','G','Bb','C'],
+      'Ab':['Ab','Bb','C','Eb','F'],
+      'Db':['Db','Eb','F','Ab','Bb'],
+      'Gb':['Gb','Ab','Bb','Db','Eb'],
+      'Cb':['Cb','Db','Eb','Gb','Ab'],
+    }
+  },
+  'Pentatônica Menor': {
+    color:'#6f8ab5',
+    desc:'5 notas. Menor sem 2ª e 6ª. Pilar do blues, rock e soul.',
+    notes:{
+      'A' :['A','C','D','E','G'],
+      'E' :['E','G','A','B','D'],
+      'B' :['B','D','E','F#','A'],
+      'F#':['F#','A','B','C#','E'],
+      'C#':['C#','E','F#','G#','B'],
+      'G#':['G#','B','C#','D#','F#'],
+      'D#':['D#','F#','G#','A#','C#'],
+      'A#':['A#','C#','D#','E#','G#'],
+      'D' :['D','F','G','A','C'],
+      'G' :['G','Bb','C','D','F'],
+      'C' :['C','Eb','F','G','Bb'],
+      'F' :['F','Ab','Bb','C','Eb'],
+      'Bb':['Bb','Db','Eb','F','Ab'],
+      'Eb':['Eb','Gb','Ab','Bb','Db'],
+      'Ab':['Ab','Cb','Db','Eb','Gb'],
+    }
+  },
+  'Blues': {
+    color:'#7e6fb5',
+    desc:'Pentatônica menor + 5ª diminuta (blue note). A essência do blues e do jazz.',
+    notes:{
+      'A' :['A','C','D','Eb','E','G'],
+      'E' :['E','G','A','Bb','B','D'],
+      'B' :['B','D','E','F','F#','A'],
+      'F#':['F#','A','B','C','C#','E'],
+      'C#':['C#','E','F#','G','G#','B'],
+      'G#':['G#','B','C#','D','D#','F#'],
+      'D#':['D#','F#','G#','A','A#','C#'],
+      'D' :['D','F','G','Ab','A','C'],
+      'G' :['G','Bb','C','Db','D','F'],
+      'C' :['C','Eb','F','Gb','G','Bb'],
+      'F' :['F','Ab','Bb','Cb','C','Eb'],
+      'Bb':['Bb','Db','Eb','Fb','F','Ab'],
+      'Eb':['Eb','Gb','Ab','Bbb','Bb','Db'],
+      'Ab':['Ab','Cb','Db','Ebb','Eb','Gb'],
+      'A#':['A#','C#','D#','E','E#','G#'],
+    }
+  },
 };
 
-const ALL_TYPE_NAMES = Object.keys(SCALE_DATA);
+// Eólio = Menor Natural, Jônio = Maior
+SCALE_DATA['Eólio'].notes  = SCALE_DATA['Menor Natural'].notes;
+SCALE_DATA['Jônio'].notes  = SCALE_DATA['Maior'].notes;
 
-function scaleNotes(root, typeName) {
-  const ri = CHROMATIC.indexOf(root);
-  return SCALE_DATA[typeName].intervals.map(s => CHROMATIC[(ri + s) % 12]);
+// Chromatic display order (with both spellings for the note buttons)
+const CHROMATIC_DISPLAY = ['C','C#/Db','D','D#/Eb','E','F','F#/Gb','G','G#/Ab','A','A#/Bb','B'];
+const CHROMATIC_SHARP   = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const CHROMATIC_FLAT    = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+
+// All tonic keys we support (union of sharp + flat roots)
+const ALL_ROOTS = ['C','C#','Db','D','D#','Eb','E','F','F#','Gb','G','G#','Ab','A','A#','Bb','B','Cb'];
+
+// Displayed tonic pills — the "nice" 12 + enharmonic equivalents
+const TONIC_PILLS = [
+  { label:'Dó',    val:'C'  },
+  { label:'Dó#/Réb', val:'C#/Db' },
+  { label:'Ré',    val:'D'  },
+  { label:'Ré#/Mib', val:'D#/Eb' },
+  { label:'Mi',    val:'E'  },
+  { label:'Fá',    val:'F'  },
+  { label:'Fá#/Solb', val:'F#/Gb' },
+  { label:'Sol',   val:'G'  },
+  { label:'Sol#/Lab', val:'G#/Ab' },
+  { label:'Lá',    val:'A'  },
+  { label:'Lá#/Sib', val:'A#/Bb' },
+  { label:'Si',    val:'B'  },
+];
+
+const TYPE_GROUPS = [
+  { label:'DIATÔNICAS', types:['Maior','Menor Natural','Menor Harmônica','Menor Melódica'] },
+  { label:'MODOS GREGOS', types:['Jônio','Dórico','Frígio','Lídio','Mixolídio','Eólio','Lócrio'] },
+  { label:'PENTATÔNICAS', types:['Pentatônica Maior','Pentatônica Menor','Blues'] },
+];
+
+// ══════════════════════════════════════════════════════════════
+//  HELPER — get notes for a tonic+type pair
+//  Handles "C#/Db" pill format and enharmonic fallback
+// ══════════════════════════════════════════════════════════════
+
+function getScaleNotes(tonicVal, typeName) {
+  const data = SCALE_DATA[typeName];
+  if (!data || !data.notes) return [];
+
+  // tonicVal might be "C#/Db" — try both
+  const candidates = tonicVal.includes('/') ? tonicVal.split('/') : [tonicVal];
+  for (const c of candidates) {
+    if (data.notes[c]) return data.notes[c];
+  }
+  return [];
 }
 
-function intervalLabel(intervals) {
-  const n = ['1','b2','2','b3','3','4','#4/b5','5','b6','6','b7','7'];
-  return intervals.map(i => n[i]).join('  ');
+// All notes that can appear (sharp + flat forms, deduped)
+function allNoteVariants(notes) {
+  // returns set of note names used in this scale for display
+  return new Set(notes);
 }
 
-// ══════════════════════════════════════════════════════
-//  STATE & PERSIST
-// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+
+let selTonics = new Set(['C']);   // pill vals like 'C', 'C#/Db', etc.
+let selTypes  = new Set(['Maior']);
+let selQty    = 10;
 
 let db = { studied:0, best:null, streak:0 };
-function dbLoad() { try { const s=localStorage.getItem('sc3_db'); if(s) db=JSON.parse(s); } catch(e){} }
-function dbSave() { try { localStorage.setItem('sc3_db', JSON.stringify(db)); } catch(e){} }
+function dbLoad() { try { const s=localStorage.getItem('sc4_db'); if(s) db=JSON.parse(s); } catch(e){} }
+function dbSave() { try { localStorage.setItem('sc4_db', JSON.stringify(db)); } catch(e){} }
 function renderHomeStats() {
   document.getElementById('hs-studied').textContent = db.studied;
   document.getElementById('hs-best').textContent    = db.best!==null ? db.best+'%' : '—';
   document.getElementById('hs-streak').textContent  = db.streak;
 }
 
-// ══════════════════════════════════════════════════════
-//  SELECTS LOGIC
-// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+//  BUILD HOME PILLS
+// ══════════════════════════════════════════════════════════════
 
-function getSelectedTonic() { return document.getElementById('sel-tonic').value; }
-function getSelectedType()  { return document.getElementById('sel-type').value; }
-function getSelectedQty()   { return document.getElementById('sel-qty').value; }
+function buildTonicPills() {
+  const wrap = document.getElementById('pills-tonic');
+  wrap.innerHTML = '';
 
-function onTypeChange() { updateSummary(); }
+  // "Todas" pill
+  const allBtn = makePill('TODAS', 'ALL', selTonics.has('ALL'), () => toggleTonic('ALL'));
+  wrap.appendChild(allBtn);
+
+  for (const t of TONIC_PILLS) {
+    const btn = makePill(t.label, t.val, selTonics.has(t.val), () => toggleTonic(t.val));
+    wrap.appendChild(btn);
+  }
+}
+
+function buildTypePills() {
+  const wrap = document.getElementById('pills-type');
+  wrap.innerHTML = '';
+
+  // "Todos" pill
+  const allBtn = makePill('TODOS', 'ALL', selTypes.has('ALL'), () => toggleType('ALL'));
+  wrap.appendChild(allBtn);
+
+  for (const group of TYPE_GROUPS) {
+    // Group separator label
+    const sep = document.createElement('div');
+    sep.style.cssText = 'width:100%;font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--dimmer);margin:4px 0 2px;';
+    sep.textContent = group.label;
+    wrap.appendChild(sep);
+
+    for (const type of group.types) {
+      const col = SCALE_DATA[type]?.color || 'var(--gold)';
+      const btn = makePill(type, type, selTypes.has(type), () => toggleType(type));
+      if (selTypes.has(type)) btn.style.borderColor = col;
+      wrap.appendChild(btn);
+    }
+  }
+}
+
+function buildQtyPills() {
+  const wrap = document.getElementById('pills-qty');
+  wrap.innerHTML = '';
+  for (const q of [5, 10, 20, 'TODOS']) {
+    const btn = document.createElement('button');
+    btn.className = 'qty-btn' + (selQty === q ? ' sel' : '');
+    btn.textContent = q === 'TODOS' ? 'TODOS' : q;
+    btn.onclick = () => { selQty = q; buildQtyPills(); updateSummary(); };
+    wrap.appendChild(btn);
+  }
+}
+
+function makePill(label, val, selected, onClick) {
+  const btn = document.createElement('button');
+  btn.className = 'pill' + (selected ? ' sel' : '');
+  btn.textContent = label;
+  btn.dataset.val = val;
+  btn.onclick = onClick;
+  return btn;
+}
+
+function toggleTonic(val) {
+  if (val === 'ALL') {
+    selTonics = selTonics.has('ALL') ? new Set(['C']) : new Set(['ALL']);
+  } else {
+    selTonics.delete('ALL');
+    if (selTonics.has(val)) {
+      if (selTonics.size > 1) selTonics.delete(val);
+    } else {
+      selTonics.add(val);
+    }
+  }
+  buildTonicPills();
+  updateSummary();
+}
+
+function toggleType(val) {
+  if (val === 'ALL') {
+    selTypes = selTypes.has('ALL') ? new Set(['Maior']) : new Set(['ALL']);
+  } else {
+    selTypes.delete('ALL');
+    if (selTypes.has(val)) {
+      if (selTypes.size > 1) selTypes.delete(val);
+    } else {
+      selTypes.add(val);
+    }
+  }
+  buildTypePills();
+  updateSummary();
+}
+
+function buildAllPills() {
+  buildTonicPills();
+  buildTypePills();
+  buildQtyPills();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DECK BUILDER
+// ══════════════════════════════════════════════════════════════
 
 function buildDeck() {
-  const tonic = getSelectedTonic();
-  const type  = getSelectedType();
-  const tonics = tonic === 'ALL' ? CHROMATIC : [tonic];
-  const types  = type  === 'ALL' ? ALL_TYPE_NAMES : [type];
+  const tonics = selTonics.has('ALL') ? TONIC_PILLS.map(t => t.val) : [...selTonics];
+  const types  = selTypes.has('ALL')
+    ? TYPE_GROUPS.flatMap(g => g.types)
+    : [...selTypes];
+
   const cards = [];
-  for (const t of tonics)
-    for (const tp of types)
-      cards.push({ root: t, typeName: tp, notes: scaleNotes(t, tp) });
+  for (const tonic of tonics) {
+    for (const type of types) {
+      const notes = getScaleNotes(tonic, type);
+      if (notes.length > 0) {
+        cards.push({ tonicVal: tonic, typeName: type, notes });
+      }
+    }
+  }
   return cards;
 }
 
 function updateSummary() {
-  const tonic  = getSelectedTonic();
-  const type   = getSelectedType();
-  const qty    = getSelectedQty();
-  const tonics = tonic === 'ALL' ? 12 : 1;
-  const types  = type  === 'ALL' ? ALL_TYPE_NAMES.length : 1;
-  const total  = tonics * types;
-  const session= qty === 'ALL' ? total : Math.min(parseInt(qty), total);
+  const deck  = buildDeck();
+  const total = deck.length;
+  const session = selQty === 'TODOS' ? total : Math.min(selQty, total);
   document.getElementById('summary').textContent =
-    `${types} tipo${types!==1?'s':''} × ${tonics} tônica${tonics!==1?'s':''} — ${session} cards por sessão`;
+    total === 0
+      ? 'nenhuma combinação disponível'
+      : `${total} combinaç${total===1?'ão':'ões'} — ${session} card${session!==1?'s':''} por sessão`;
 }
 
-// listen to all selects
-['sel-tonic','sel-type','sel-qty'].forEach(id =>
-  document.getElementById(id).addEventListener('change', updateSummary)
-);
-
-// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 //  PREVIEW
-// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 
 function openPreview() {
-  const tonic = getSelectedTonic() === 'ALL' ? 'C' : getSelectedTonic();
-  const type  = getSelectedType()  === 'ALL' ? 'Maior' : getSelectedType();
-  const data  = SCALE_DATA[type];
-  const notes = scaleNotes(tonic, type);
+  const tonics = selTonics.has('ALL') ? ['C'] : [...selTonics];
+  const types  = selTypes.has('ALL')  ? ['Maior'] : [...selTypes];
+  const tonic  = tonics[0];
+  const type   = types[0];
+  const notes  = getScaleNotes(tonic, type);
+  const data   = SCALE_DATA[type];
 
-  document.getElementById('pv-root').textContent = tonic;
+  // Display root nicely
+  const rootLabel = TONIC_PILLS.find(p => p.val === tonic)?.label || tonic;
+
+  document.getElementById('pv-root').textContent = rootLabel.split('/')[0];
   document.getElementById('pv-type').textContent = type;
-  document.getElementById('pv-type').style.color = data.color;
+  document.getElementById('pv-type').style.color = data?.color || 'var(--gold)';
 
   document.getElementById('pv-notes').innerHTML = notes.map((n,i) =>
     `<span class="pv-note${i===0?' root':''}" style="${i===0?'border-color:'+data.color+';color:'+data.color:''}">${n}</span>`
   ).join('');
 
-  document.getElementById('pv-intervals').textContent = intervalLabel(data.intervals);
-  document.getElementById('pv-desc').textContent = data.desc;
+  // Interval labels based on count
+  const intLabels7  = ['T','t','st','T','T','st','T'];
+  const intLabels5  = ['T','T','m3','T'];
+  document.getElementById('pv-intervals').textContent = notes.map((n,i) => n).join('  –  ');
+  document.getElementById('pv-desc').textContent = data?.desc || '';
+
   document.getElementById('preview-modal').classList.add('show');
 }
 
-function closePreview() {
-  document.getElementById('preview-modal').classList.remove('show');
-}
+function closePreview() { document.getElementById('preview-modal').classList.remove('show'); }
+document.getElementById('preview-modal').addEventListener('click', function(e){ if(e.target===this) closePreview(); });
 
-// Tap outside modal to close
-document.getElementById('preview-modal').addEventListener('click', function(e) {
-  if (e.target === this) closePreview();
-});
-
-// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 //  QUIZ
-// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 
-const PER_DEFAULT = 10;
 let deck=[], ci=0, nC=0, nE=0, answered=false, curStreak=0, picked=new Set();
 
 function shuffle(a) {
@@ -659,7 +832,6 @@ function shuffle(a) {
   for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}
   return b;
 }
-
 function show(id) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -669,12 +841,63 @@ function goHome() { show('home'); renderHomeStats(); updateSummary(); }
 function startQuiz() {
   const all = buildDeck();
   if (!all.length) return;
-  const qty = getSelectedQty();
-  const n   = qty === 'ALL' ? all.length : Math.min(parseInt(qty), all.length);
-  deck = shuffle(all).slice(0, n);
+  const n = selQty==='TODOS' ? all.length : Math.min(selQty, all.length);
+  deck=shuffle(all).slice(0,n);
   ci=0; nC=0; nE=0; curStreak=0;
   show('quiz');
   renderCard();
+}
+
+// Build the 12 chromatic note buttons, using both sharp and flat names
+function buildNoteGrid(scaleNotes) {
+  const grid = document.getElementById('note-grid');
+  grid.innerHTML = '';
+
+  // Collect all note names in this scale as a Set
+  const inScale = new Set(scaleNotes);
+
+  // We show 12 buttons — one per chromatic position
+  // Each button shows the enharmonic form present in the scale if applicable,
+  // otherwise the sharp form. This way buttons always match what the player expects.
+  const sharpToFlat = {'C#':'Db','D#':'Eb','F#':'Gb','G#':'Ab','A#':'Bb'};
+  const flatToSharp = {'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#'};
+
+  const noteButtons = CHROMATIC_SHARP.map(sharp => {
+    const flat = sharpToFlat[sharp];
+    // Decide which spelling to display on the button:
+    // prefer whichever form is in the current scale
+    let display = sharp;
+    if (inScale.has(flat))  display = flat;
+    if (inScale.has(sharp)) display = sharp;
+    // If neither is in scale, just show sharp
+    return { display, sharp, flat: flat||null };
+  });
+
+  for (const nb of shuffle(noteButtons)) {
+    const b = document.createElement('button');
+    b.className = 'nbtn';
+    b.textContent = nb.display;
+    b.dataset.sharp   = nb.sharp;
+    b.dataset.flat    = nb.flat || '';
+    b.dataset.display = nb.display;
+    b.onclick = () => toggleNote(b);
+    grid.appendChild(b);
+  }
+}
+
+function toggleNote(btn) {
+  if (answered) return;
+  const key = btn.dataset.display;
+  if (picked.has(key)) {
+    picked.delete(key);
+    btn.classList.remove('sel');
+  } else {
+    picked.add(key);
+    btn.classList.add('sel');
+    btn.classList.add('pop');
+    btn.addEventListener('animationend',()=>btn.classList.remove('pop'),{once:true});
+  }
+  document.getElementById('confirm-btn').disabled = picked.size===0;
 }
 
 function renderCard() {
@@ -686,12 +909,15 @@ function renderCard() {
   document.getElementById('qs-c').textContent = nC;
   document.getElementById('qs-e').textContent = nE;
 
-  const data = SCALE_DATA[card.typeName];
+  const data   = SCALE_DATA[card.typeName];
+  const color  = data?.color || '#b8955a';
+  const rootLabel = TONIC_PILLS.find(p=>p.val===card.tonicVal)?.label.split('/')[0] || card.tonicVal;
+
   document.getElementById('card-tag').textContent  = card.typeName.toUpperCase();
-  document.getElementById('card-tag').style.color  = data.color;
-  document.getElementById('card-root').textContent = card.root;
+  document.getElementById('card-tag').style.color  = color;
+  document.getElementById('card-root').textContent = rootLabel;
   document.getElementById('card-type').textContent = card.typeName;
-  document.getElementById('card-type').style.color = data.color;
+  document.getElementById('card-type').style.color = color;
   document.getElementById('card-prompt').textContent = `SELECIONE AS ${card.notes.length} NOTAS`;
 
   const fb=document.getElementById('fb-text');
@@ -699,17 +925,9 @@ function renderCard() {
 
   const cb=document.getElementById('confirm-btn');
   cb.textContent='CONFIRMAR'; cb.disabled=true; cb.className='';
-
   document.getElementById('next-btn').classList.remove('show');
 
-  const grid=document.getElementById('note-grid');
-  grid.innerHTML='';
-  for (const note of shuffle(CHROMATIC)) {
-    const b=document.createElement('button');
-    b.className='nbtn'; b.textContent=note; b.dataset.note=note;
-    b.onclick=()=>toggleNote(b,note);
-    grid.appendChild(b);
-  }
+  buildNoteGrid(card.notes);
 
   const cardEl=document.getElementById('card');
   cardEl.classList.remove('out','in');
@@ -717,26 +935,25 @@ function renderCard() {
   cardEl.classList.add('in');
 }
 
-function toggleNote(btn,note) {
-  if(answered) return;
-  if(picked.has(note)){picked.delete(note);btn.classList.remove('sel');}
-  else{
-    picked.add(note);btn.classList.add('sel');
-    btn.classList.add('pop');
-    btn.addEventListener('animationend',()=>btn.classList.remove('pop'),{once:true});
-  }
-  document.getElementById('confirm-btn').disabled=picked.size===0;
-}
-
 function doConfirm() {
   if(answered||picked.size===0) return;
   answered=true;
-  const card=deck[ci], correct=new Set(card.notes);
-  const isRight=[...correct].every(n=>picked.has(n))&&[...picked].every(n=>correct.has(n));
+
+  const card    = deck[ci];
+  const correct = new Set(card.notes);
+
+  // Check: picked must match correct exactly
+  // picked contains display names, correct contains the proper scale spelling
+  const isRight = [...correct].every(n=>picked.has(n)) && [...picked].every(n=>correct.has(n));
 
   document.querySelectorAll('.nbtn').forEach(b=>{
-    const n=b.dataset.note,inC=correct.has(n),inP=picked.has(n);
-    b.className=inC&&inP?'nbtn hit':!inC&&inP?'nbtn err':inC&&!inP?'nbtn miss':'nbtn dim';
+    const disp = b.dataset.display;
+    const inC  = correct.has(disp);
+    const inP  = picked.has(disp);
+    if      (inC&&inP)  b.className='nbtn hit';
+    else if (!inC&&inP) b.className='nbtn err';
+    else if (inC&&!inP) b.className='nbtn miss';
+    else                b.className='nbtn dim';
   });
 
   const fb=document.getElementById('fb-text');
@@ -771,34 +988,33 @@ function finish() {
 
   const msgs=[[90,'Domínio impressionante. As escalas são suas.'],[70,'Muito bem! A teoria está se tornando instinto.'],[50,'Bom progresso. Revise as que erraste.'],[0,'A prática diária transforma teoria em música.']];
   document.getElementById('r-msg').textContent=msgs.find(([t])=>pct>=t)[1];
-
   document.getElementById('prog-bar').style.width='100%';
   show('result');
 }
 
-// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 //  BANNER & SW
-// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 
 function closeBanner(){
   document.getElementById('banner').classList.remove('show');
-  try{localStorage.setItem('sc3_banner','1');}catch(e){}
+  try{localStorage.setItem('sc4_banner','1');}catch(e){}
 }
 function maybeBanner(){
   if(!/iphone|ipad|ipod/i.test(navigator.userAgent)||window.navigator.standalone) return;
-  try{if(localStorage.getItem('sc3_banner'))return;}catch(e){}
+  try{if(localStorage.getItem('sc4_banner'))return;}catch(e){}
   setTimeout(()=>document.getElementById('banner').classList.add('show'),2500);
 }
-
 if('serviceWorker' in navigator)
   window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 
-// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 //  INIT
-// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 dbLoad();
-renderHomeStats();
+buildAllPills();
 updateSummary();
+renderHomeStats();
 maybeBanner();
 </script>
 </body>
