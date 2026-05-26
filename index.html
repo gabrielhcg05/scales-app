@@ -43,16 +43,17 @@
     .screen {
       position: fixed; inset: 0;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
+      align-items: center; justify-content: flex-start; /* MUDOU AQUI */
       opacity: 0; pointer-events: none;
       transition: opacity 0.32s ease; z-index: 10;
-      padding: 28px 24px max(28px, env(safe-area-inset-bottom));
+      /* Ajuste no padding para dar um respiro no topo e na base: */
+      padding: max(40px, env(safe-area-inset-top)) 24px max(40px, env(safe-area-inset-bottom));
       overflow-y: auto; -webkit-overflow-scrolling: touch;
     }
     .screen.active { opacity: 1; pointer-events: all; }
 
     /* ════ HOME ════ */
-    #home { gap: 0; justify-content: center; }
+    #home { gap: 0; justify-content: flex-start; padding-top: 8vh; } /* MUDOU AQUI */
 
     .eyebrow { font-family: var(--mono); font-size: 9px; letter-spacing: 6px; color: var(--dim); margin-bottom: 8px; animation: up 0.5s ease 0.05s both; }
     .big-title { font-size: clamp(50px, 15vw, 68px); font-weight: 300; line-height: 0.92; letter-spacing: -2px; margin-bottom: 4px; animation: up 0.5s ease 0.1s both; }
@@ -192,7 +193,7 @@
     #next-btn:active { border-color: var(--gold); color: var(--gold); }
 
     /* ════ RESULT ════ */
-    #result { justify-content: center; }
+    #result { justify-content: flex-start; padding-top: 15vh; }
     .res-title { font-size: clamp(44px, 13vw, 58px); font-weight: 300; line-height: 0.95; margin-bottom: 4px; animation: up 0.5s ease 0.05s both; }
     .res-title em { font-style: italic; color: var(--gold); }
     .res-sub { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--dim); margin-bottom: 34px; animation: up 0.5s ease 0.1s both; }
