@@ -43,17 +43,16 @@
     .screen {
       position: fixed; inset: 0;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: flex-start; /* MUDOU AQUI */
+      align-items: center; justify-content: flex-start;
       opacity: 0; pointer-events: none;
       transition: opacity 0.32s ease; z-index: 10;
-      /* Ajuste no padding para dar um respiro no topo e na base: */
       padding: max(40px, env(safe-area-inset-top)) 24px max(40px, env(safe-area-inset-bottom));
       overflow-y: auto; -webkit-overflow-scrolling: touch;
     }
     .screen.active { opacity: 1; pointer-events: all; }
 
     /* ════ HOME ════ */
-    #home { gap: 0; justify-content: flex-start; padding-top: 8vh; } /* MUDOU AQUI */
+    #home { gap: 0; justify-content: flex-start; padding-top: 8vh; }
 
     .eyebrow { font-family: var(--mono); font-size: 9px; letter-spacing: 6px; color: var(--dim); margin-bottom: 8px; animation: up 0.5s ease 0.05s both; }
     .big-title { font-size: clamp(50px, 15vw, 68px); font-weight: 300; line-height: 0.92; letter-spacing: -2px; margin-bottom: 4px; animation: up 0.5s ease 0.1s both; }
@@ -134,8 +133,7 @@
       border-radius: 4px; 
       padding: 26px 22px 22px; 
       width: 100%; 
-      max-width: 360px;
-      /* Novas regras adicionadas abaixo: */
+      max-width: 360px; 
       max-height: 85vh; 
       overflow-y: auto; 
       -webkit-overflow-scrolling: touch; 
@@ -215,6 +213,22 @@
     #banner p span { color: var(--fg); }
     #banner-close { position: absolute; top: 10px; right: 14px; background: none; border: none; color: var(--dimmer); font-size: 18px; cursor: pointer; }
 
+    /* UPDATE BANNER PWA */
+    #update-banner {
+      display: none; position: fixed; top: 0; left: 50%;
+      transform: translateX(-50%); background: var(--gold); color: var(--bg);
+      border-radius: 8px; padding: 12px 20px;
+      font-family: var(--mono); font-size: 10px; letter-spacing: 2px; font-weight: bold;
+      z-index: 1000; cursor: pointer; white-space: nowrap;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    }
+    #update-banner.show { display: block; animation: dropDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+    #update-banner span { opacity: 0.7; margin-left: 10px; }
+    @keyframes dropDown { 
+      from { opacity: 0; transform: translate(-50%, -20px); } 
+      to { opacity: 1; transform: translate(-50%, max(20px, env(safe-area-inset-top))); } 
+    }
+
     @keyframes up  { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform:none; } }
     @keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.14)} 100%{transform:scale(1)} }
     .pop { animation: pop 0.17s ease; }
@@ -222,25 +236,24 @@
 </head>
 <body>
 
-<!-- ══ HOME ══════════════════════════════════════════ -->
-<div id="home" class="screen active">
-  <p class="eyebrow">TEORIA MUSICAL - Beta 1.0</p>
-  <h1 class="big-title">Esca<em>las</em></h1>
-  <!--<p class="home-sub">MAIOR · MENOR · MODOS GREGOS · PENTATÔNICAS</p> -->
+<div id="update-banner" onclick="location.reload(true)">
+  NOVA VERSÃO DISPONÍVEL <span>ATUALIZAR ⟳</span>
+</div>
 
-  <!-- TÔNICA -->
+<div id="home" class="screen active">
+  <p class="eyebrow">TEORIA MUSICAL - Beta 0.0.2</p>
+  <h1 class="big-title">Esca<em>las</em></h1>
+
   <div class="filter-block">
     <div class="filter-label">TÔNICA</div>
     <div class="pill-row" id="pills-tonic"></div>
   </div>
 
-  <!-- TIPO -->
   <div class="filter-block">
     <div class="filter-label">TIPO DE ESCALA</div>
     <div class="pill-row" id="pills-type"></div>
   </div>
 
-  <!-- QTD -->
   <div class="filter-block" style="animation-delay:0.22s">
     <div class="filter-label">CARDS POR SESSÃO</div>
     <div class="qty-row" id="pills-qty"></div>
@@ -260,7 +273,6 @@
   </div>
 </div>
 
-<!-- ══ PREVIEW ════════════════════════════════════════ -->
 <div id="preview-modal">
   <div class="pv-box" id="pv-container">
     <div class="pv-top">
@@ -273,7 +285,6 @@
   </div>
 </div>
 
-<!-- ══ QUIZ ══════════════════════════════════════════ -->
 <div id="quiz" class="screen">
   <div id="prog-wrap"><div id="prog-bar"></div></div>
   <div id="quiz-bar">
@@ -298,7 +309,6 @@
   </div>
 </div>
 
-<!-- ══ RESULT ════════════════════════════════════════ -->
 <div id="result" class="screen">
   <h2 class="res-title">Ses<em>são</em></h2>
   <p class="res-sub">completa</p>
@@ -320,13 +330,10 @@
 </div>
 
 <script>
-
 // ══════════════════════════════════════════════════════════════
 //  TEORIA — notas com grafia enarmônica correta por escala
 // ══════════════════════════════════════════════════════════════
 
-// Cada escala tem suas notas escritas de forma teoricamente correta
-// (bemóis ou sustenidos conforme a tradição tonal)
 const SCALE_DATA = {
   // ── Diatônicas ──
   'Maior': {
@@ -388,7 +395,6 @@ const SCALE_DATA = {
       'Bb':['Bb','C','Db','Eb','F','Gb','A'],
       'Eb':['Eb','F','Gb','Ab','Bb','Cb','D'],
       'D#':['D#','E#','F#','G#','A#','B','C##'],
-      'G#':['G#','A#','B','C#','D#','E','F##'],
       'Ab':['Ab','Bb','Cb','Db','Eb','Fb','G'],
     }
   },
@@ -416,7 +422,7 @@ const SCALE_DATA = {
   'Jônio': {
     color:'#b8a05a',
     desc:'I modo. Idêntico à escala maior. Brilhante e estável.',
-    notes:null // gerado automaticamente igual à Maior
+    notes:null // gerado automaticamente
   },
   'Dórico': {
     color:'#6f9eb5',
@@ -505,7 +511,7 @@ const SCALE_DATA = {
   'Eólio': {
     color:'#7e8eb5',
     desc:'VI modo. Idêntico à menor natural. Sombrio e introspectivo.',
-    notes:null // gerado = Menor Natural
+    notes:null // gerado automaticamente
   },
   'Lócrio': {
     color:'#b56f6f',
@@ -598,15 +604,9 @@ const SCALE_DATA = {
 SCALE_DATA['Eólio'].notes  = SCALE_DATA['Menor Natural'].notes;
 SCALE_DATA['Jônio'].notes  = SCALE_DATA['Maior'].notes;
 
-// Chromatic display order (with both spellings for the note buttons)
-const CHROMATIC_DISPLAY = ['C','C#/Db','D','D#/Eb','E','F','F#/Gb','G','G#/Ab','A','A#/Bb','B'];
-const CHROMATIC_SHARP   = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-const CHROMATIC_FLAT    = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+const CHROMATIC_SHARP  = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const CHROMATIC_FLAT   = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
 
-// All tonic keys we support (union of sharp + flat roots)
-const ALL_ROOTS = ['C','C#','Db','D','D#','Eb','E','F','F#','Gb','G','G#','Ab','A','A#','Bb','B','Cb'];
-
-// Displayed tonic pills — the "nice" 12 + enharmonic equivalents
 const TONIC_PILLS = [
   { label:'Dó',    val:'C'  },
   { label:'Dó#/Réb', val:'C#/Db' },
@@ -629,15 +629,12 @@ const TYPE_GROUPS = [
 ];
 
 // ══════════════════════════════════════════════════════════════
-//  HELPER — get notes for a tonic+type pair
-//  Handles "C#/Db" pill format and enharmonic fallback
+//  HELPERS
 // ══════════════════════════════════════════════════════════════
 
 function getScaleNotes(tonicVal, typeName) {
   const data = SCALE_DATA[typeName];
   if (!data || !data.notes) return [];
-
-  // tonicVal might be "C#/Db" — try both
   const candidates = tonicVal.includes('/') ? tonicVal.split('/') : [tonicVal];
   for (const c of candidates) {
     if (data.notes[c]) return data.notes[c];
@@ -645,17 +642,11 @@ function getScaleNotes(tonicVal, typeName) {
   return [];
 }
 
-// All notes that can appear (sharp + flat forms, deduped)
-function allNoteVariants(notes) {
-  // returns set of note names used in this scale for display
-  return new Set(notes);
-}
-
 // ══════════════════════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════════════════════
 
-let selTonics = new Set(['C']);   // pill vals like 'C', 'C#/Db', etc.
+let selTonics = new Set(['C']);
 let selTypes  = new Set(['Maior']);
 let selQty    = 10;
 
@@ -669,17 +660,14 @@ function renderHomeStats() {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  BUILD HOME PILLS
+//  UI BUILDING
 // ══════════════════════════════════════════════════════════════
 
 function buildTonicPills() {
   const wrap = document.getElementById('pills-tonic');
   wrap.innerHTML = '';
-
-  // "Todas" pill
   const allBtn = makePill('TODAS', 'ALL', selTonics.has('ALL'), () => toggleTonic('ALL'));
   wrap.appendChild(allBtn);
-
   for (const t of TONIC_PILLS) {
     const btn = makePill(t.label, t.val, selTonics.has(t.val), () => toggleTonic(t.val));
     wrap.appendChild(btn);
@@ -689,18 +677,13 @@ function buildTonicPills() {
 function buildTypePills() {
   const wrap = document.getElementById('pills-type');
   wrap.innerHTML = '';
-
-  // "Todos" pill
   const allBtn = makePill('TODOS', 'ALL', selTypes.has('ALL'), () => toggleType('ALL'));
   wrap.appendChild(allBtn);
-
   for (const group of TYPE_GROUPS) {
-    // Group separator label
     const sep = document.createElement('div');
     sep.style.cssText = 'width:100%;font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--dimmer);margin:4px 0 2px;';
     sep.textContent = group.label;
     wrap.appendChild(sep);
-
     for (const type of group.types) {
       const col = SCALE_DATA[type]?.color || 'var(--gold)';
       const btn = makePill(type, type, selTypes.has(type), () => toggleType(type));
@@ -767,23 +750,14 @@ function buildAllPills() {
   buildQtyPills();
 }
 
-// ══════════════════════════════════════════════════════════════
-//  DECK BUILDER
-// ══════════════════════════════════════════════════════════════
-
 function buildDeck() {
   const tonics = selTonics.has('ALL') ? TONIC_PILLS.map(t => t.val) : [...selTonics];
-  const types  = selTypes.has('ALL')
-    ? TYPE_GROUPS.flatMap(g => g.types)
-    : [...selTypes];
-
+  const types  = selTypes.has('ALL') ? TYPE_GROUPS.flatMap(g => g.types) : [...selTypes];
   const cards = [];
   for (const tonic of tonics) {
     for (const type of types) {
       const notes = getScaleNotes(tonic, type);
-      if (notes.length > 0) {
-        cards.push({ tonicVal: tonic, typeName: type, notes });
-      }
+      if (notes.length > 0) cards.push({ tonicVal: tonic, typeName: type, notes });
     }
   }
   return cards;
@@ -794,9 +768,7 @@ function updateSummary() {
   const total = deck.length;
   const session = selQty === 'TODOS' ? total : Math.min(selQty, total);
   document.getElementById('summary').textContent =
-    total === 0
-      ? 'nenhuma combinação disponível'
-      : `${total} combinaç${total===1?'ão':'ões'} — ${session} card${session!==1?'s':''} por sessão`;
+    total === 0 ? 'nenhuma combinação disponível' : `${total} combinaç${total===1?'ão':'ões'} — ${session} card${session!==1?'s':''} por sessão`;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -806,19 +778,10 @@ function updateSummary() {
 function openPreview() {
   const modal = document.getElementById('preview-modal');
   const container = document.getElementById('pv-container');
+  const tonics = selTonics.has('ALL') ? TONIC_PILLS.map(t => t.val) : [...selTonics];
+  const types = selTypes.has('ALL') ? TYPE_GROUPS.flatMap(g => g.types) : [...selTypes];
 
-  const tonics = selTonics.has('ALL')
-    ? TONIC_PILLS.map(t => t.val)
-    : [...selTonics];
-
-  const types = selTypes.has('ALL')
-    ? TYPE_GROUPS.flatMap(g => g.types)
-    : [...selTypes];
-
-  // limpa modal
   container.innerHTML = '';
-
-  // botão fechar
   const top = document.createElement('div');
   top.style.display = 'flex';
   top.style.justifyContent = 'flex-end';
@@ -833,87 +796,41 @@ function openPreview() {
   container.appendChild(top);
 
   let total = 0;
-
   for (const tonic of tonics) {
     for (const type of types) {
-
       const notes = getScaleNotes(tonic, type);
-
       if (!notes.length) continue;
-
       total++;
-
       const data = SCALE_DATA[type];
-
-      const rootLabel =
-        TONIC_PILLS.find(p => p.val === tonic)?.label.split('/')[0]
-        || tonic;
-
+      const rootLabel = TONIC_PILLS.find(p => p.val === tonic)?.label.split('/')[0] || tonic;
       const card = document.createElement('div');
-
-      card.style.cssText = `
-        margin-bottom: 28px;
-        padding-bottom: 22px;
-        border-bottom: 1px solid var(--border);
-      `;
-
+      card.style.cssText = 'margin-bottom: 28px; padding-bottom: 22px; border-bottom: 1px solid var(--border);';
       card.innerHTML = `
         <div class="pv-top">
           <div>
             <div class="pv-root">${rootLabel}</div>
-
-            <div class="pv-type"
-                 style="color:${data?.color || 'var(--gold)'}">
-              ${type}
-            </div>
+            <div class="pv-type" style="color:${data?.color || 'var(--gold)'}">${type}</div>
           </div>
         </div>
-
         <div class="pv-notes">
           ${notes.map((n, i) => `
-            <span
-              class="pv-note ${i === 0 ? 'root' : ''}"
-              style="${
-                i === 0
-                  ? `border-color:${data.color};color:${data.color}`
-                  : ''
-              }"
-            >
+            <span class="pv-note ${i === 0 ? 'root' : ''}" style="${i === 0 ? `border-color:${data.color};color:${data.color}` : ''}">
               ${n}
             </span>
           `).join('')}
         </div>
-
-        <div class="pv-intervals">
-          ${notes.join(' – ')}
-        </div>
-
-        <div class="pv-desc">
-          ${data?.desc || ''}
-        </div>
+        <div class="pv-intervals">${notes.join(' – ')}</div>
+        <div class="pv-desc">${data?.desc || ''}</div>
       `;
-
       container.appendChild(card);
     }
   }
-
-  // caso nenhuma combinação exista
   if (total === 0) {
     const empty = document.createElement('div');
-
-    empty.style.cssText = `
-      text-align:center;
-      font-family:var(--mono);
-      font-size:11px;
-      color:var(--dim);
-      padding:20px 0;
-    `;
-
+    empty.style.cssText = 'text-align:center; font-family:var(--mono); font-size:11px; color:var(--dim); padding:20px 0;';
     empty.textContent = 'Nenhuma escala disponível';
-
     container.appendChild(empty);
   }
-
   modal.classList.add('show');
 }
 
@@ -948,28 +865,16 @@ function startQuiz() {
   renderCard();
 }
 
-// Build the 12 chromatic note buttons, using both sharp and flat names
 function buildNoteGrid(scaleNotes) {
   const grid = document.getElementById('note-grid');
   grid.innerHTML = '';
-
-  // Collect all note names in this scale as a Set
   const inScale = new Set(scaleNotes);
-
-  // We show 12 buttons — one per chromatic position
-  // Each button shows the enharmonic form present in the scale if applicable,
-  // otherwise the sharp form. This way buttons always match what the player expects.
   const sharpToFlat = {'C#':'Db','D#':'Eb','F#':'Gb','G#':'Ab','A#':'Bb'};
-  const flatToSharp = {'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#'};
-
   const noteButtons = CHROMATIC_SHARP.map(sharp => {
     const flat = sharpToFlat[sharp];
-    // Decide which spelling to display on the button:
-    // prefer whichever form is in the current scale
     let display = sharp;
     if (inScale.has(flat))  display = flat;
     if (inScale.has(sharp)) display = sharp;
-    // If neither is in scale, just show sharp
     return { display, sharp, flat: flat||null };
   });
 
@@ -1041,9 +946,6 @@ function doConfirm() {
 
   const card    = deck[ci];
   const correct = new Set(card.notes);
-
-  // Check: picked must match correct exactly
-  // picked contains display names, correct contains the proper scale spelling
   const isRight = [...correct].every(n=>picked.has(n)) && [...picked].every(n=>correct.has(n));
 
   document.querySelectorAll('.nbtn').forEach(b=>{
@@ -1105,23 +1007,23 @@ function maybeBanner(){
   try{if(localStorage.getItem('sc4_banner'))return;}catch(e){}
   setTimeout(()=>document.getElementById('banner').classList.add('show'),2500);
 }
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then(reg => {
-      // Dispara quando o navegador detecta uma diferença de bytes no sw.js
-      reg.onupdatefound = () => {
-        const installingWorker = reg.installing;
-        installingWorker.onstatechange = () => {
-          // Se baixou a versão nova E já existia uma velha rodando:
-          if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            console.log('Nova versão detectada! Recarregando a página...');
-            location.reload();
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('Nova versão pronta. Exibindo botão de atualizar.');
+            document.getElementById('update-banner').classList.add('show');
           }
-        };
-      };
-    }).catch(err => console.log('Erro no SW:', err));
+        });
+      });
+    }).catch(err => console.log('Service Worker falhou:', err));
   });
 }
+
 // ══════════════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════════════
