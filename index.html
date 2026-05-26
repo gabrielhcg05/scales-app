@@ -308,9 +308,7 @@
 </div>
 
 <script>
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-  window.location.reload();
-});
+
 // ══════════════════════════════════════════════════════════════
 //  TEORIA — notas com grafia enarmônica correta por escala
 // ══════════════════════════════════════════════════════════════
@@ -1019,6 +1017,40 @@ buildAllPills();
 updateSummary();
 renderHomeStats();
 maybeBanner();
+
+(function () {
+  let refreshed = false;
+
+  async function tryRefresh() {
+    if (refreshed) return;
+    if (!navigator.onLine) return;
+
+    refreshed = true;
+
+    try {
+      // força o browser a verificar versão nova
+      const res = await fetch(window.location.href, {
+        cache: 'no-store'
+      });
+
+      if (res.ok) {
+        window.location.reload(true);
+      }
+    } catch (e) {}
+  }
+
+  // abre app
+  window.addEventListener('load', () => {
+    setTimeout(tryRefresh, 800);
+  });
+
+  // volta do background
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      tryRefresh();
+    }
+  });
+})();
 </script>
 </body>
 </html>

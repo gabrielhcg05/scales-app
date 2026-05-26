@@ -1,5 +1,5 @@
 const CACHE = 'scales-v1';
-const ASSETS = ['./manifest.json', './icon.svg'];
+const ASSETS = ['./index.html','./manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
@@ -17,7 +17,10 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.mode === 'navigate') {
-    e.respondWith(fetch(e.request));
+    e.respondWith(
+      fetch(e.request, { cache: 'no-store' })
+        .catch(() => caches.match('./index.html'))
+    );
     return;
   }
 
