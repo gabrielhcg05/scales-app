@@ -212,7 +212,7 @@
 
 <!-- ══ HOME ══════════════════════════════════════════ -->
 <div id="home" class="screen active">
-  <p class="eyebrow">TEORIA MUSICAL - v1</p>
+  <p class="eyebrow">TEORIA MUSICAL - Beta 0.0.2</p>
   <h1 class="big-title">Esca<em>las</em></h1>
   <!--<p class="home-sub">MAIOR · MENOR · MODOS GREGOS · PENTATÔNICAS</p> -->
 
@@ -250,7 +250,7 @@
 
 <!-- ══ PREVIEW ════════════════════════════════════════ -->
 <div id="preview-modal">
-  <div class="pv-box">
+  <div class="pv-box" id="pv-container">
     <div class="pv-top">
       <div><div class="pv-root" id="pv-root">C</div><div class="pv-type" id="pv-type">Maior</div></div>
       <button id="pv-close" onclick="closePreview()">×</button>
@@ -792,35 +792,73 @@ function updateSummary() {
 // ══════════════════════════════════════════════════════════════
 
 function openPreview() {
-  const tonics = selTonics.has('ALL') ? ['C'] : [...selTonics];
-  const types  = selTypes.has('ALL')  ? ['Maior'] : [...selTypes];
-  const tonic  = tonics[0];
-  const type   = types[0];
-  const notes  = getScaleNotes(tonic, type);
-  const data   = SCALE_DATA[type];
+  const tonics = selTonics.has('ALL')
+    ? TONIC_PILLS.map(t => t.val)
+    : [...selTonics];
 
-  // Display root nicely
-  const rootLabel = TONIC_PILLS.find(p => p.val === tonic)?.label || tonic;
+  const types = selTypes.has('ALL')
+    ? TYPE_GROUPS.flatMap(g => g.types)
+    : [...selTypes];
 
-  document.getElementById('pv-root').textContent = rootLabel.split('/')[0];
-  document.getElementById('pv-type').textContent = type;
-  document.getElementById('pv-type').style.color = data?.color || 'var(--gold)';
+  const container = document.getElementById('pv-container');
+  container.innerHTML = '';
 
-  document.getElementById('pv-notes').innerHTML = notes.map((n,i) =>
-    `<span class="pv-note${i===0?' root':''}" style="${i===0?'border-color:'+data.color+';color:'+data.color:''}">${n}</span>`
-  ).join('');
+  for (const tonic of tonics) {
+    for (const type of types) {
+      const notes = getScaleNotes(tonic, type);
+      if (!notes.length) continue;
 
-  // Interval labels based on count
-  const intLabels7  = ['T','t','st','T','T','st','T'];
-  const intLabels5  = ['T','T','m3','T'];
-  document.getElementById('pv-intervals').textContent = notes.map((n,i) => n).join('  –  ');
-  document.getElementById('pv-desc').textContent = data?.desc || '';
+      const data = SCALE_DATA[type];
+      const rootLabel =
+        TONIC_PILLS.find(p => p.val === tonic)?.label.split('/')[0] || tonic;
+
+      const card = document.createElement('div');
+      card.style.marginBottom = '28px';
+
+      card.innerHTML = `
+        <div class="pv-top">
+          <div>
+            <div class="pv-root">${rootLabel}</div>
+            <div class="pv-type" style="color:${data?.color || 'var(--gold)'}">
+              ${type}
+            </div>
+          </div>
+        </div>
+
+        <div class="pv-notes">
+          ${notes.map((n, i) => `
+            <span class="pv-note ${i===0?'root':''}"
+              style="${i===0 ? `border-color:${data.color};color:${data.color}` : ''}">
+              ${n}
+            </span>
+          `).join('')}
+        </div>
+
+        <div class="pv-intervals">
+          ${notes.join(' – ')}
+        </div>
+
+        <div class="pv-desc">
+          ${data?.desc || ''}
+        </div>
+      `;
+
+      container.appendChild(card);
+    }
+  }
+
+  const closeBtn = document.createElement('button');
+  closeBtn.id = 'pv-close';
+  closeBtn.textContent = '×';
+  closeBtn.onclick = closePreview;
+  closeBtn.style.position = 'absolute';
+  closeBtn.style.top = '18px';
+  closeBtn.style.right = '22px';
+
+  container.appendChild(closeBtn);
 
   document.getElementById('preview-modal').classList.add('show');
 }
-
-function closePreview() { document.getElementById('preview-modal').classList.remove('show'); }
-document.getElementById('preview-modal').addEventListener('click', function(e){ if(e.target===this) closePreview(); });
 
 // ══════════════════════════════════════════════════════════════
 //  QUIZ
