@@ -1,4 +1,4 @@
-const CACHE = 'scales-v3';
+const CACHE = 'scales-v1';
 const ASSETS = ['./index.html','./manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
