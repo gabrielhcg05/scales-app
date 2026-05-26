@@ -127,7 +127,18 @@
       backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     }
     #preview-modal.show { display: flex; animation: up 0.22s ease both; }
-    .pv-box { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 26px 22px 22px; width: 100%; max-width: 360px; }
+    .pv-box { 
+      background: var(--surface); 
+      border: 1px solid var(--border); 
+      border-radius: 4px; 
+      padding: 26px 22px 22px; 
+      width: 100%; 
+      max-width: 360px;
+      /* Novas regras adicionadas abaixo: */
+      max-height: 85vh; 
+      overflow-y: auto; 
+      -webkit-overflow-scrolling: touch; 
+    }
     .pv-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
     .pv-root { font-size: 52px; font-weight: 300; line-height: 1; }
     .pv-type { font-size: 17px; font-style: italic; color: var(--gold); margin-top: 2px; }
