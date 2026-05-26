@@ -223,7 +223,7 @@
 
 <!-- ══ HOME ══════════════════════════════════════════ -->
 <div id="home" class="screen active">
-  <p class="eyebrow">TEORIA MUSICAL - Beta 0.0.2</p>
+  <p class="eyebrow">TEORIA MUSICAL - Beta 0.0.3 (offline)</p>
   <h1 class="big-title">Esca<em>las</em></h1>
   <!--<p class="home-sub">MAIOR · MENOR · MODOS GREGOS · PENTATÔNICAS</p> -->
 
@@ -1104,9 +1104,23 @@ function maybeBanner(){
   try{if(localStorage.getItem('sc4_banner'))return;}catch(e){}
   setTimeout(()=>document.getElementById('banner').classList.add('show'),2500);
 }
-if('serviceWorker' in navigator)
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=1').catch(()=>{}));
-
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      // Dispara quando o navegador detecta uma diferença de bytes no sw.js
+      reg.onupdatefound = () => {
+        const installingWorker = reg.installing;
+        installingWorker.onstatechange = () => {
+          // Se baixou a versão nova E já existia uma velha rodando:
+          if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('Nova versão detectada! Recarregando a página...');
+            location.reload();
+          }
+        };
+      };
+    }).catch(err => console.log('Erro no SW:', err));
+  });
+}
 // ══════════════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════════════
@@ -1116,21 +1130,6 @@ updateSummary();
 renderHomeStats();
 maybeBanner();
 
-(function () {
-  const KEY = 'last_force_reload';
-  const now = Date.now();
-
-  // evita loop infinito
-  const last = Number(sessionStorage.getItem(KEY) || 0);
-
-  // só força reload se:
-  // - estiver online
-  // - e não tiver recarregado nos últimos 3 segundos
-  if (navigator.onLine && now - last > 3000) {
-    sessionStorage.setItem(KEY, now);
-    location.reload(true);
-  }
-})();
 </script>
 </body>
 </html>
