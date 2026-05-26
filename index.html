@@ -792,6 +792,9 @@ function updateSummary() {
 // ══════════════════════════════════════════════════════════════
 
 function openPreview() {
+  const modal = document.getElementById('preview-modal');
+  const container = document.getElementById('pv-container');
+
   const tonics = selTonics.has('ALL')
     ? TONIC_PILLS.map(t => t.val)
     : [...selTonics];
@@ -800,26 +803,55 @@ function openPreview() {
     ? TYPE_GROUPS.flatMap(g => g.types)
     : [...selTypes];
 
-  const container = document.getElementById('pv-container');
+  // limpa modal
   container.innerHTML = '';
+
+  // botão fechar
+  const top = document.createElement('div');
+  top.style.display = 'flex';
+  top.style.justifyContent = 'flex-end';
+  top.style.marginBottom = '10px';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.id = 'pv-close';
+  closeBtn.textContent = '×';
+  closeBtn.onclick = closePreview;
+
+  top.appendChild(closeBtn);
+  container.appendChild(top);
+
+  let total = 0;
 
   for (const tonic of tonics) {
     for (const type of types) {
+
       const notes = getScaleNotes(tonic, type);
+
       if (!notes.length) continue;
 
+      total++;
+
       const data = SCALE_DATA[type];
+
       const rootLabel =
-        TONIC_PILLS.find(p => p.val === tonic)?.label.split('/')[0] || tonic;
+        TONIC_PILLS.find(p => p.val === tonic)?.label.split('/')[0]
+        || tonic;
 
       const card = document.createElement('div');
-      card.style.marginBottom = '28px';
+
+      card.style.cssText = `
+        margin-bottom: 28px;
+        padding-bottom: 22px;
+        border-bottom: 1px solid var(--border);
+      `;
 
       card.innerHTML = `
         <div class="pv-top">
           <div>
             <div class="pv-root">${rootLabel}</div>
-            <div class="pv-type" style="color:${data?.color || 'var(--gold)'}">
+
+            <div class="pv-type"
+                 style="color:${data?.color || 'var(--gold)'}">
               ${type}
             </div>
           </div>
@@ -827,8 +859,14 @@ function openPreview() {
 
         <div class="pv-notes">
           ${notes.map((n, i) => `
-            <span class="pv-note ${i===0?'root':''}"
-              style="${i===0 ? `border-color:${data.color};color:${data.color}` : ''}">
+            <span
+              class="pv-note ${i === 0 ? 'root' : ''}"
+              style="${
+                i === 0
+                  ? `border-color:${data.color};color:${data.color}`
+                  : ''
+              }"
+            >
               ${n}
             </span>
           `).join('')}
@@ -847,17 +885,28 @@ function openPreview() {
     }
   }
 
-  const closeBtn = document.createElement('button');
-  closeBtn.id = 'pv-close';
-  closeBtn.textContent = '×';
-  closeBtn.onclick = closePreview;
-  closeBtn.style.position = 'absolute';
-  closeBtn.style.top = '18px';
-  closeBtn.style.right = '22px';
+  // caso nenhuma combinação exista
+  if (total === 0) {
+    const empty = document.createElement('div');
 
-  container.appendChild(closeBtn);
+    empty.style.cssText = `
+      text-align:center;
+      font-family:var(--mono);
+      font-size:11px;
+      color:var(--dim);
+      padding:20px 0;
+    `;
 
-  document.getElementById('preview-modal').classList.add('show');
+    empty.textContent = 'Nenhuma escala disponível';
+
+    container.appendChild(empty);
+  }
+
+  modal.classList.add('show');
+}
+
+function closePreview() {
+  document.getElementById('preview-modal').classList.remove('show');
 }
 
 // ══════════════════════════════════════════════════════════════
