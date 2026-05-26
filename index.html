@@ -212,7 +212,7 @@
 
 <!-- ══ HOME ══════════════════════════════════════════ -->
 <div id="home" class="screen active">
-  <p class="eyebrow">TEORIA MUSICAL v2</p>
+  <p class="eyebrow">TEORIA MUSICAL v3</p>
   <h1 class="big-title">Esca<em>las</em></h1>
   <p class="home-sub">MAIOR · MENOR · MODOS GREGOS · PENTATÔNICAS</p>
 
@@ -1007,7 +1007,7 @@ function maybeBanner(){
   setTimeout(()=>document.getElementById('banner').classList.add('show'),2500);
 }
 if('serviceWorker' in navigator)
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=2').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=3').catch(()=>{}));
 
 // ══════════════════════════════════════════════════════════════
 //  INIT
@@ -1019,37 +1019,19 @@ renderHomeStats();
 maybeBanner();
 
 (function () {
-  let refreshed = false;
+  const KEY = 'last_force_reload';
+  const now = Date.now();
 
-  async function tryRefresh() {
-    if (refreshed) return;
-    if (!navigator.onLine) return;
+  // evita loop infinito
+  const last = Number(sessionStorage.getItem(KEY) || 0);
 
-    refreshed = true;
-
-    try {
-      // força o browser a verificar versão nova
-      const res = await fetch(window.location.href, {
-        cache: 'no-store'
-      });
-
-      if (res.ok) {
-        window.location.reload(true);
-      }
-    } catch (e) {}
+  // só força reload se:
+  // - estiver online
+  // - e não tiver recarregado nos últimos 3 segundos
+  if (navigator.onLine && now - last > 3000) {
+    sessionStorage.setItem(KEY, now);
+    location.reload(true);
   }
-
-  // abre app
-  window.addEventListener('load', () => {
-    setTimeout(tryRefresh, 800);
-  });
-
-  // volta do background
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      tryRefresh();
-    }
-  });
 })();
 </script>
 </body>
